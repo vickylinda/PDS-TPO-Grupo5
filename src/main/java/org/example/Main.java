@@ -24,6 +24,7 @@ public class Main {
                 2) Login
                 3) WhoAmI (requiere token)
                 4) Logout
+                5) Login con Google
                 0) Salir
                 """);
             System.out.print("Opción: ");
@@ -53,9 +54,21 @@ public class Main {
                     case "3" -> {
                         ensureToken(token);
                         String email = auth.whoAmI(token);
-                        System.out.println("Sos: " + email);
+                        var userOpt = new org.example.store.JsonStore().findUserByEmail(email);
+                        boolean conGoogle = userOpt.isPresent() && userOpt.get().isInicioSesionConGoogle();
+                        System.out.println("Usuario: " + email);
+                        System.out.println("Inicio de sesión con Google: " + (conGoogle ? "Sí" : "No"));
                     }
                     case "4" -> { token = null; System.out.println("Logout OK."); }
+                    case "5" -> {
+                        String clientId = System.getenv("GOOGLE_OAUTH_CLIENT_ID");
+                        String clientSecret = System.getenv("GOOGLE_OAUTH_CLIENT_SECRET"); // puede ser null
+                        if (clientId == null || clientId.isBlank())
+                            throw new IllegalStateException("Configura GOOGLE_OAUTH_CLIENT_ID en variables de entorno.");
+                        token = auth.loginWithGoogle(clientId, clientSecret);
+                        System.out.println("Login Google OK. Token local:\n" + token);
+                    }
+
                     case "0" -> { System.out.println("Chau!"); return; }
                     default -> System.out.println("Opción inválida.");
                 }
