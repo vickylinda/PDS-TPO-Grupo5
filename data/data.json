@@ -1,0 +1,9 @@
+{
+  "users" : [ {
+    "id" : "0c6a466d-96ff-454d-8511-4c874b26b92e",
+    "email" : "vickylinda@gmail.com",
+    "passwordHash" : "V9rwmM2+6Jh37OtlokpAsQcvU7W0bBfrpi5cD+JlkO4=",
+    "saltBase64" : "4o1+8hoB6t4VrHH81F7oAQ==",
+    "active" : true
+  } ]
+}
