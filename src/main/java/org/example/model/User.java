@@ -8,6 +8,8 @@ public class User {
     private boolean active = true;
     private Boolean inicioSesionConGoogle = false;
 
+    private Perfil perfil;
+
     public User() {}
 
     public User(String id, String email, String passwordHash, String saltBase64) {
@@ -41,4 +43,7 @@ public class User {
     public void setInicioSesionConGoogle(Boolean inicioSesionConGoogle) {
         this.inicioSesionConGoogle = inicioSesionConGoogle;
     }
+
+    public Perfil getPerfil() {return perfil;}
+    public void setPerfil(Perfil perfil) {this.perfil = perfil;}
 }
