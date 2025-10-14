@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Perfil {
     private int id;
-    private String juegoPrincipal;
+    private Juego juegoPrincipal;
     private List<Rol> rolesPreferidos;
     private String disponibilidadHoraria;
     private IRangoState rango;
@@ -17,7 +17,7 @@ public class Perfil {
         this.puntaje = 0;
     }
 
-    public Perfil(int id, String juegoPrincipal, String disponibilidadHoraria) {
+    public Perfil(int id, Juego juegoPrincipal, String disponibilidadHoraria) {
         this.id = id;
         this.juegoPrincipal = juegoPrincipal;
         this.disponibilidadHoraria = disponibilidadHoraria;
@@ -59,11 +59,11 @@ public class Perfil {
         this.id = id;
     }
 
-    public String getJuegoPrincipal() {
+    public Juego getJuegoPrincipal() {
         return juegoPrincipal;
     }
 
-    public void setJuegoPrincipal(String juegoPrincipal) {
+    public void setJuegoPrincipal(Juego juegoPrincipal) {
         this.juegoPrincipal = juegoPrincipal;
     }
 

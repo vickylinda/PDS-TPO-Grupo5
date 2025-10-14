@@ -1,7 +1,6 @@
 package org.example;
 
 import org.example.model.*;
-
 import org.example.service.AuthService;
 import org.example.store.JsonStore;
 
@@ -9,6 +8,18 @@ import java.io.Console;
 import java.util.Scanner;
 
 public class Main {
+    // Lista de juegos disponibles
+    private static final Juego[] JUEGOS_DISPONIBLES = {
+            new Juego(1, "League of Legends", "MOBA 5v5 competitivo"),
+            new Juego(2, "Valorant", "FPS táctico 5v5"),
+            new Juego(3, "Dota 2", "MOBA estratégico"),
+            new Juego(4, "Counter-Strike 2", "FPS competitivo"),
+            new Juego(5, "Overwatch 2", "Hero shooter por equipos"),
+            new Juego(6, "Rocket League", "Fútbol con autos"),
+            new Juego(7, "Fortnite", "Battle Royale"),
+            new Juego(8, "Apex Legends", "Battle Royale con héroes")
+    };
+
     public static void main(String[] args) throws Exception {
         JsonStore store = new JsonStore();
         AuthService auth = new AuthService(store);
@@ -16,7 +27,7 @@ public class Main {
         Scanner sc = new Scanner(System.in);
         Console console = System.console();
         String token = null;
-        User currentUser = null; // Para mantener referencia al usuario actual
+        User currentUser = null;
 
         System.out.println("Archivo de datos: " + JsonStore.dataFilePath());
 
@@ -91,24 +102,37 @@ public class Main {
                         System.out.println("✅ Login Google OK. Token local:\n" + token);
                     }
 
-                    // === NUEVAS OPCIONES DE PERFIL ===
                     case "6" -> {
                         ensureLoggedIn(currentUser);
-                        System.out.print("Juego principal (ej: League of Legends, Valorant): ");
-                        String juego = sc.nextLine().trim();
+
+                        // Mostrar juegos disponibles
+                        System.out.println("\n🎮 Juegos disponibles:");
+                        for (int i = 0; i < JUEGOS_DISPONIBLES.length; i++) {
+                            System.out.println((i + 1) + ". " + JUEGOS_DISPONIBLES[i].getNombre() +
+                                    " - " + JUEGOS_DISPONIBLES[i].getDescripcion());
+                        }
+                        System.out.print("Selecciona tu juego principal (1-" + JUEGOS_DISPONIBLES.length + "): ");
+                        int juegoIdx = Integer.parseInt(sc.nextLine().trim()) - 1;
+
+                        if (juegoIdx < 0 || juegoIdx >= JUEGOS_DISPONIBLES.length) {
+                            throw new IllegalArgumentException("Opción de juego inválida.");
+                        }
+
+                        Juego juegoSeleccionado = JUEGOS_DISPONIBLES[juegoIdx];
+
                         System.out.print("Disponibilidad horaria (ej: Noches 8pm-12am): ");
                         String disponibilidad = sc.nextLine().trim();
 
                         if (currentUser.getPerfil() == null) {
                             Perfil perfil = new Perfil(
                                     Integer.parseInt(currentUser.getId().substring(0, 8), 16),
-                                    juego,
+                                    juegoSeleccionado,
                                     disponibilidad
                             );
                             currentUser.setPerfil(perfil);
                             System.out.println("✅ Perfil creado exitosamente.");
                         } else {
-                            currentUser.getPerfil().setJuegoPrincipal(juego);
+                            currentUser.getPerfil().setJuegoPrincipal(juegoSeleccionado);
                             currentUser.getPerfil().setDisponibilidadHoraria(disponibilidad);
                             System.out.println("✅ Perfil actualizado.");
                         }
@@ -119,7 +143,7 @@ public class Main {
                         ensureLoggedIn(currentUser);
                         ensurePerfil(currentUser);
 
-                        System.out.println("\nRoles disponibles:");
+                        System.out.println("\n🎮 Roles disponibles:");
                         System.out.println("1. Support - Rol de apoyo al equipo");
                         System.out.println("2. ADC - Tirador/Carry");
                         System.out.println("3. Mid - Línea central");
@@ -187,7 +211,6 @@ public class Main {
                 }
             } catch (Exception e) {
                 System.out.println("❌ Error: " + e.getMessage());
-                e.printStackTrace();
             }
         }
     }
@@ -218,7 +241,7 @@ public class Main {
         System.out.println("\n" + "=".repeat(50));
         System.out.println("📋 PERFIL DE " + user.getEmail());
         System.out.println("=".repeat(50));
-        System.out.println("Juego principal: " + p.getJuegoPrincipal());
+        System.out.println("Juego principal: " + p.getJuegoPrincipal().getNombre());
         System.out.println("Disponibilidad: " + p.getDisponibilidadHoraria());
         System.out.println("Puntaje: " + p.getPuntaje());
         System.out.println("Rango: " + p.getRango().getNombre());
@@ -249,7 +272,8 @@ public class Main {
         System.out.println("Login con Google: " + (user.isInicioSesionConGoogle() ? "Sí" : "No"));
         System.out.println();
         System.out.println("--- Información del Perfil ---");
-        System.out.println("Juego principal: " + p.getJuegoPrincipal());
+        System.out.println("Juego principal: " + p.getJuegoPrincipal().getNombre());
+        System.out.println("Descripción: " + p.getJuegoPrincipal().getDescripcion());
         System.out.println("Disponibilidad: " + p.getDisponibilidadHoraria());
         System.out.println("Puntaje: " + p.getPuntaje());
         System.out.println();
@@ -295,13 +319,17 @@ public class Main {
         System.out.println("🎮 DEMO: SISTEMA DE RANGOS");
         System.out.println("=".repeat(60));
 
-        // Crear un perfil de prueba
-        Perfil perfil = new Perfil(999, "League of Legends", "Todo el día");
+        // Crear un perfil de prueba con un juego
+        Juego juegoDemo = new Juego(1, "League of Legends", "MOBA 5v5 competitivo");
+        Perfil perfil = new Perfil(999, juegoDemo, "Todo el día");
 
         // Agregar algunos roles
         perfil.agregarRolPreferido(new Rol(1, "Support", "Rol de apoyo"));
         perfil.agregarRolPreferido(new Rol(3, "Mid", "Línea central"));
 
+        System.out.println("Perfil de demostración creado:");
+        System.out.println("  • Juego: " + perfil.getJuegoPrincipal().getNombre());
+        System.out.println("  • Roles: " + perfil.getRolesPreferidos().size() + " roles preferidos");
         System.out.println("\n📊 Simulando progresión de rangos...\n");
 
         // Simular progresión
@@ -327,6 +355,7 @@ public class Main {
 
         System.out.println("\n" + "=".repeat(60));
         System.out.println("Resumen final:");
+        System.out.println("  • Juego: " + perfil.getJuegoPrincipal().getNombre());
         System.out.println("  • Rango: " + perfil.getRango().getNombre());
         System.out.println("  • Nivel: " + perfil.getRango().getValorNivel());
         System.out.println("  • Puntaje: " + perfil.getPuntaje());

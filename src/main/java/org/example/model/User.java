@@ -9,6 +9,7 @@ public class User {
     private Boolean inicioSesionConGoogle = false;
 
     private Perfil perfil;
+    private String region;
 
     public User() {}
 
@@ -46,4 +47,8 @@ public class User {
 
     public Perfil getPerfil() {return perfil;}
     public void setPerfil(Perfil perfil) {this.perfil = perfil;}
+
+    public String getRegion() {return region;}
+
+    public void setRegion(String region) {this.region = region;}
 }
