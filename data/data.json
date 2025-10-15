@@ -1,0 +1,27 @@
+{
+  "users" : [ {
+    "id" : "202413a7-6fdb-46cc-b7c8-a255c61035a5",
+    "email" : "vickylinda@gmail.com",
+    "passwordHash" : "fGn+U6YUs7qAt+pIXknQEBtjZYdRWslR4bg+UOJwYUY=",
+    "saltBase64" : "N8/teQnnw+vYUawVcDY7+A==",
+    "active" : true,
+    "inicioSesionConGoogle" : false,
+    "perfil" : null
+  }, {
+    "id" : "87811ce3-905b-4551-821e-b35353686708",
+    "email" : "vicky9abril@gmail.com",
+    "passwordHash" : "",
+    "saltBase64" : "",
+    "active" : true,
+    "inicioSesionConGoogle" : true,
+    "perfil" : null
+  }, {
+    "id" : "74dab48a-a440-4c75-85e7-b319ea381867",
+    "email" : "mery@gmail.com",
+    "passwordHash" : "1AWpC1qphY6d7nxq35kgl4c2UWRAwpgQcFkdrk8RqWY=",
+    "saltBase64" : "vqHKHzJ+MRJ/HBxqs63t0A==",
+    "active" : true,
+    "inicioSesionConGoogle" : false,
+    "perfil" : null
+  } ]
+}
