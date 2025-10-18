@@ -5,6 +5,10 @@ import org.example.service.AuthService;
 import org.example.store.JsonStore;
 
 import java.io.Console;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -19,6 +23,8 @@ public class Main {
             new Juego(7, "Fortnite", "Battle Royale"),
             new Juego(8, "Apex Legends", "Battle Royale con héroes")
     };
+    // Lista para almacenar scrims creados
+    private static final List<Scrim> scrims = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
         JsonStore store = new JsonStore();
@@ -33,24 +39,35 @@ public class Main {
 
         while (true) {
             System.out.println("""
-                ====== MENU ======
-                === AUTENTICACIÓN ===
-                1) Registrar usuario
-                2) Login
-                3) WhoAmI (requiere token)
-                4) Logout
-                5) Login con Google
-                
-                === PERFIL Y RANGOS ===
-                6) Crear/Actualizar Perfil
-                7) Agregar Rol Preferido
-                8) Ver Mi Perfil
-                9) Actualizar Puntaje (simular progresión)
-                10) Ver Información de Rango
-                11) Probar Sistema de Rangos (demo completo)
-                
-                0) Salir
-                """);
+                    ====== MENU ======
+                    === AUTENTICACIÓN ===
+                    1) Registrar usuario
+                    2) Login
+                    3) WhoAmI (requiere token)
+                    4) Logout
+                    5) Login con Google
+                                    
+                    === PERFIL Y RANGOS ===
+                    6) Crear/Actualizar Perfil
+                    7) Agregar Rol Preferido
+                    8) Ver Mi Perfil
+                    9) Actualizar Puntaje (simular progresión)
+                    10) Ver Información de Rango
+                    11) Probar Sistema de Rangos (demo completo)
+                                    
+                    === GESTIÓN DE SCRIMS ===
+                    12) Crear Scrim
+                    13) Ver Scrims Disponibles
+                    14) Unirse a un Scrim
+                    15) Confirmar Participación
+                    16) Iniciar Partida
+                    17) Finalizar Partida
+                    18) Cancelar Scrim
+                    19) Cargar Resultados
+                    20) Demo Completo de Scrim
+                                    
+                    0) Salir
+                    """);
             System.out.print("Opción: ");
             String op = sc.nextLine().trim();
 
@@ -203,6 +220,48 @@ public class Main {
                         demoSistemaRangos();
                     }
 
+                    // ===== NUEVAS OPCIONES DE SCRIM =====
+                    case "12" -> {
+                        ensureLoggedIn(currentUser);
+                        ensurePerfil(currentUser);
+                        crearScrim(sc, currentUser);
+                    }
+
+                    case "13" -> {
+                        verScrimsDisponibles();
+                    }
+
+                    case "14" -> {
+                        ensureLoggedIn(currentUser);
+                        ensurePerfil(currentUser);
+                        unirseAScrim(sc, currentUser);
+                    }
+
+                    case "15" -> {
+                        ensureLoggedIn(currentUser);
+                        confirmarParticipacion(sc, currentUser);
+                    }
+
+                    case "16" -> {
+                        iniciarPartida(sc);
+                    }
+
+                    case "17" -> {
+                        finalizarPartida(sc);
+                    }
+
+                    case "18" -> {
+                        cancelarScrim(sc);
+                    }
+
+                    case "19" -> {
+                        cargarResultados(sc);
+                    }
+
+                    case "20" -> {
+                        demoCompletoScrim();
+                    }
+
                     case "0" -> {
                         System.out.println("👋 ¡Hasta luego!");
                         return;
@@ -213,6 +272,334 @@ public class Main {
                 System.out.println("❌ Error: " + e.getMessage());
             }
         }
+    }
+
+    // ===== MÉTODOS DE SCRIM =====
+
+    private static void crearScrim(Scanner sc, User currentUser) {
+        System.out.println("\n" + "=".repeat(60));
+        System.out.println("🎮 CREAR NUEVO SCRIM");
+        System.out.println("=".repeat(60));
+
+        // Seleccionar juego
+        System.out.println("\nJuegos disponibles:");
+        for (int i = 0; i < JUEGOS_DISPONIBLES.length; i++) {
+            System.out.println((i + 1) + ". " + JUEGOS_DISPONIBLES[i].getNombre());
+        }
+        System.out.print("Selecciona el juego (1-" + JUEGOS_DISPONIBLES.length + "): ");
+        int juegoIdx = Integer.parseInt(sc.nextLine().trim()) - 1;
+        Juego juego = JUEGOS_DISPONIBLES[juegoIdx];
+
+        // Configurar formato
+        System.out.print("Jugadores por lado (ej: 5 para 5v5): ");
+        int jugadoresPorLado = Integer.parseInt(sc.nextLine().trim());
+
+        // Región
+        System.out.print("Región (ej: LAN, NA, EUW): ");
+        String region = sc.nextLine().trim();
+
+        // Fecha y hora
+        System.out.println("Fecha y hora de inicio (dejar vacío para ahora)");
+        System.out.print("Formato: yyyy-MM-dd HH:mm (ej: 2025-10-20 19:00): ");
+        String fechaStr = sc.nextLine().trim();
+        LocalDateTime fechaHora;
+        if (fechaStr.isEmpty()) {
+            fechaHora = LocalDateTime.now().plusMinutes(5);
+        } else {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+            fechaHora = LocalDateTime.parse(fechaStr, formatter);
+        }
+
+        // Requisitos de rango (opcional)
+        System.out.print("¿Deseas establecer requisitos de rango? (s/n): ");
+        String establecerRango = sc.nextLine().trim().toLowerCase();
+
+        ScrimBuilder builder = ScrimBuilder.nuevo()
+                .juego(juego)
+                .formato(jugadoresPorLado)
+                .region(region)
+                .fechaHora(fechaHora);
+
+        if (establecerRango.equals("s")) {
+            System.out.print("Rango mínimo (1-10): ");
+            int rangoMin = Integer.parseInt(sc.nextLine().trim());
+            System.out.print("Rango máximo (1-10): ");
+            int rangoMax = Integer.parseInt(sc.nextLine().trim());
+            builder.rango(rangoMin, rangoMax);
+        }
+
+        Scrim scrim = builder.build();
+        scrim.setCreadorId(currentUser.getId());
+        scrims.add(scrim);
+
+        System.out.println("\n✅ Scrim creado exitosamente!");
+        System.out.println("ID: " + scrim.getId());
+        System.out.println("Estado: " + scrim.getNombreEstadoActual());
+        System.out.println("Formato: " + scrim.getFormato());
+        System.out.println("Región: " + scrim.getRegion());
+        System.out.println("Fecha: " + scrim.getFechaHora());
+        System.out.println("Jugadores: " + scrim.getJugadoresActuales() + "/" + scrim.getCantidadTotalJugadores());
+    }
+
+    private static void verScrimsDisponibles() {
+        System.out.println("\n" + "=".repeat(80));
+        System.out.println("📋 SCRIMS DISPONIBLES");
+        System.out.println("=".repeat(80));
+
+        if (scrims.isEmpty()) {
+            System.out.println("No hay scrims disponibles.");
+            return;
+        }
+
+        for (int i = 0; i < scrims.size(); i++) {
+            Scrim s = scrims.get(i);
+            System.out.println("\n[" + (i + 1) + "] ID: " + s.getId().substring(0, 8) + "...");
+            System.out.println("    Estado: " + s.getNombreEstadoActual());
+            System.out.println("    Juego: " + s.getJuego().getNombre());
+            System.out.println("    Formato: " + s.getFormato());
+            System.out.println("    Región: " + s.getRegion());
+            System.out.println("    Jugadores: " + s.getJugadoresActuales() + "/" + s.getCantidadTotalJugadores());
+            System.out.println("    Fecha: " + s.getFechaHora());
+        }
+        System.out.println("=".repeat(80) + "\n");
+    }
+
+    private static void unirseAScrim(Scanner sc, User currentUser) {
+        if (scrims.isEmpty()) {
+            System.out.println("No hay scrims disponibles.");
+            return;
+        }
+
+        verScrimsDisponibles();
+        System.out.print("\nSelecciona el número del scrim: ");
+        int idx = Integer.parseInt(sc.nextLine().trim()) - 1;
+
+        if (idx < 0 || idx >= scrims.size()) {
+            throw new IllegalArgumentException("Scrim inválido.");
+        }
+
+        Scrim scrim = scrims.get(idx);
+
+        try {
+            scrim.agregarJugador(currentUser);
+            System.out.println("✅ Te has unido al scrim exitosamente!");
+            scrim.mostrarInfo();
+        } catch (Exception e) {
+            System.out.println("❌ No se pudo unir al scrim: " + e.getMessage());
+        }
+    }
+
+    private static void confirmarParticipacion(Scanner sc, User currentUser) {
+        if (scrims.isEmpty()) {
+            System.out.println("No hay scrims disponibles.");
+            return;
+        }
+
+        verScrimsDisponibles();
+        System.out.print("\nSelecciona el número del scrim: ");
+        int idx = Integer.parseInt(sc.nextLine().trim()) - 1;
+
+        if (idx < 0 || idx >= scrims.size()) {
+            throw new IllegalArgumentException("Scrim inválido.");
+        }
+
+        Scrim scrim = scrims.get(idx);
+
+        try {
+            scrim.confirmarJugador(currentUser);
+            System.out.println("✅ Participación confirmada!");
+        } catch (Exception e) {
+            System.out.println("❌ Error: " + e.getMessage());
+        }
+    }
+
+    private static void iniciarPartida(Scanner sc) {
+        if (scrims.isEmpty()) {
+            System.out.println("No hay scrims disponibles.");
+            return;
+        }
+
+        verScrimsDisponibles();
+        System.out.print("\nSelecciona el número del scrim: ");
+        int idx = Integer.parseInt(sc.nextLine().trim()) - 1;
+
+        if (idx < 0 || idx >= scrims.size()) {
+            throw new IllegalArgumentException("Scrim inválido.");
+        }
+
+        Scrim scrim = scrims.get(idx);
+        scrim.iniciarPartida();
+    }
+
+    private static void finalizarPartida(Scanner sc) {
+        if (scrims.isEmpty()) {
+            System.out.println("No hay scrims disponibles.");
+            return;
+        }
+
+        verScrimsDisponibles();
+        System.out.print("\nSelecciona el número del scrim: ");
+        int idx = Integer.parseInt(sc.nextLine().trim()) - 1;
+
+        if (idx < 0 || idx >= scrims.size()) {
+            throw new IllegalArgumentException("Scrim inválido.");
+        }
+
+        Scrim scrim = scrims.get(idx);
+        scrim.finalizarPartida();
+    }
+
+    private static void cancelarScrim(Scanner sc) {
+        if (scrims.isEmpty()) {
+            System.out.println("No hay scrims disponibles.");
+            return;
+        }
+
+        verScrimsDisponibles();
+        System.out.print("\nSelecciona el número del scrim: ");
+        int idx = Integer.parseInt(sc.nextLine().trim()) - 1;
+
+        if (idx < 0 || idx >= scrims.size()) {
+            throw new IllegalArgumentException("Scrim inválido.");
+        }
+
+        Scrim scrim = scrims.get(idx);
+        scrim.cancelar();
+        System.out.println("✅ Scrim cancelado.");
+    }
+
+    private static void cargarResultados(Scanner sc) {
+        if (scrims.isEmpty()) {
+            System.out.println("No hay scrims disponibles.");
+            return;
+        }
+
+        verScrimsDisponibles();
+        System.out.print("\nSelecciona el número del scrim: ");
+        int idx = Integer.parseInt(sc.nextLine().trim()) - 1;
+
+        if (idx < 0 || idx >= scrims.size()) {
+            throw new IllegalArgumentException("Scrim inválido.");
+        }
+
+        Scrim scrim = scrims.get(idx);
+
+        System.out.print("Equipo ganador (A/B): ");
+        String ganador = sc.nextLine().trim().toUpperCase();
+
+        Resultados resultados = new Resultados();
+        resultados.registrarGanador("Equipo " + ganador);
+
+        try {
+            scrim.cargarResultados(resultados);
+            System.out.println("✅ Resultados cargados exitosamente!");
+        } catch (Exception e) {
+            System.out.println("❌ Error: " + e.getMessage());
+        }
+    }
+
+    private static void demoCompletoScrim() {
+        System.out.println("\n" + "=".repeat(80));
+        System.out.println("🎮 DEMO COMPLETO: CICLO DE VIDA DE UN SCRIM");
+        System.out.println("=".repeat(80));
+
+        // Crear usuarios de prueba
+        List<User> usuarios = new ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            User user = new User();
+            user.setId("user-" + i);
+            user.setEmail("jugador" + i + "@example.com");
+            user.setRegion("LAN");
+
+            Perfil perfil = new Perfil(i, JUEGOS_DISPONIBLES[0], "Todo el día");
+            perfil.actualizarPuntaje(500 + (i * 100));
+            user.setPerfil(perfil);
+
+            usuarios.add(user);
+        }
+
+        // 1. Crear scrim
+        System.out.println("\n📝 PASO 1: Creando scrim 5v5...");
+        Scrim scrim = ScrimBuilder.nuevo()
+                .juego(JUEGOS_DISPONIBLES[0])
+                .formato(5)
+                .region("LAN")
+                .fechaHora(LocalDateTime.now().plusMinutes(10))
+                .rango(1, 10)
+                .build();
+
+        System.out.println("   Estado: " + scrim.getNombreEstadoActual());
+
+        // 2. Agregar jugadores
+        System.out.println("\n👥 PASO 2: Agregando jugadores...");
+        for (int i = 0; i < 10; i++) {
+            scrim.agregarJugador(usuarios.get(i));
+            System.out.println("   Jugador " + (i + 1) + " agregado - " +
+                    scrim.getJugadoresActuales() + "/" + scrim.getCantidadTotalJugadores());
+        }
+        System.out.println("   Estado: " + scrim.getNombreEstadoActual());
+
+        // 3. Confirmar jugadores
+        System.out.println("\n✅ PASO 3: Confirmando jugadores...");
+        for (int i = 0; i < 10; i++) {
+            scrim.confirmarJugador(usuarios.get(i));
+        }
+        System.out.println("   Estado: " + scrim.getNombreEstadoActual());
+
+        // 4. Iniciar partida
+        System.out.println("\n🎮 PASO 4: Iniciando partida...");
+        scrim.iniciarPartida();
+        System.out.println("   Estado: " + scrim.getNombreEstadoActual());
+
+        // 5. Finalizar partida
+        System.out.println("\n🏁 PASO 5: Finalizando partida...");
+        scrim.finalizarPartida();
+        System.out.println("   Estado: " + scrim.getNombreEstadoActual());
+
+        // 6. Cargar resultados
+        System.out.println("\n📊 PASO 6: Cargando resultados...");
+        Resultados resultados = new Resultados();
+        resultados.registrarGanador("Equipo A");
+
+        for (int i = 0; i < 5; i++) {
+            Estadisticas stats = new Estadisticas();
+            stats.setKills(10 + i);
+            stats.setDeaths(5);
+            stats.setAssists(8 + i);
+            stats.setPuntaje(1000 + (i * 100));
+            resultados.agregarEstadistica(usuarios.get(i), stats);
+        }
+
+        scrim.cargarResultados(resultados);
+
+        // Mostrar información final
+        System.out.println("\n" + "=".repeat(80));
+        System.out.println("📋 INFORMACIÓN FINAL DEL SCRIM");
+        System.out.println("=".repeat(80));
+        scrim.mostrarInfo();
+        System.out.println("Estado final: " + scrim.getNombreEstadoActual());
+        System.out.println("Ganador: " + resultados.getGanadorEquipo());
+        System.out.println("Fecha de finalización: " + scrim.getFechaFinalizacion());
+        System.out.println("=".repeat(80) + "\n");
+
+        // Demo de cancelación
+        System.out.println("\n🚫 DEMO EXTRA: Intentando cancelar un scrim finalizado...");
+        scrim.cancelar();
+
+        // Demo de crear y cancelar
+        System.out.println("\n🚫 DEMO EXTRA: Creando y cancelando un scrim...");
+        Scrim scrimCancelado = ScrimBuilder.nuevo()
+                .juego(JUEGOS_DISPONIBLES[1])
+                .formato(3)
+                .region("NA")
+                .fechaHora(LocalDateTime.now().plusHours(1))
+                .build();
+
+        System.out.println("Estado antes de cancelar: " + scrimCancelado.getNombreEstadoActual());
+        scrimCancelado.cancelar();
+        System.out.println("Estado después de cancelar: " + scrimCancelado.getNombreEstadoActual());
+
+        System.out.println("\n✅ Demo completo finalizado!");
     }
 
     private static char[] readPassword(Console console, Scanner sc, String prompt) {
