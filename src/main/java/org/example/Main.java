@@ -68,6 +68,26 @@ public class Main {
                                     
                     0) Salir
                     """);
+                ====== MENU ======
+                === AUTENTICACIÓN ===
+                1) Registrar usuario
+                2) Login
+                3) WhoAmI (requiere token)
+                4) Logout
+                5) Login con Google
+                6) Listar usuarios (MOD/ADMIN)
+                7) Promover a MOD/ADMIN (solo ADMIN)
+                
+                === PERFIL Y RANGOS ===
+                6) Crear/Actualizar Perfil
+                7) Agregar Rol Preferido
+                8) Ver Mi Perfil
+                9) Actualizar Puntaje (simular progresión)
+                10) Ver Información de Rango
+                11) Probar Sistema de Rangos (demo completo)
+                
+                0) Salir
+                """);
             System.out.print("Opción: ");
             String op = sc.nextLine().trim();
 
@@ -100,10 +120,10 @@ public class Main {
                     case "3" -> {
                         ensureToken(token);
                         String email = auth.whoAmI(token);
-                        var userOpt = store.findUserByEmail(email);
-                        boolean conGoogle = userOpt.isPresent() && userOpt.get().isInicioSesionConGoogle();
-                        System.out.println("Usuario: " + email);
-                        System.out.println("Inicio de sesión con Google: " + (conGoogle ? "Sí" : "No"));
+                        var u = store.findUserByEmail(email).orElseThrow();
+                        System.out.println("Usuario: " + u.getEmail());
+                        System.out.println("Rol: " + u.getRoleName());
+                        System.out.println("Google: " + (u.isInicioSesionConGoogle() ? "Sí" : "No"));
                     }
                     case "4" -> {
                         token = null;
@@ -188,6 +208,32 @@ public class Main {
                         ensurePerfil(currentUser);
                         mostrarPerfilCompleto(currentUser);
                     }
+                    case "6" -> {
+                        ensureToken(token);
+                        var list = auth.listUsers(token);
+                        System.out.println("=== Usuarios ===");
+                        for (var u : list) {
+                            System.out.printf("- %-30s  [%s]  google:%s%n",
+                                    u.getEmail(), u.getRoleName(), u.isInicioSesionConGoogle() ? "sí" : "no");
+                        }
+                    }
+
+                    case "7" -> {
+                        ensureToken(token);
+                        System.out.print("Email destino: ");
+                        String emailDst = sc.nextLine().trim();
+                        System.out.print("Nuevo rol (MOD/ADMIN): ");
+                        String rol = sc.nextLine().trim().toUpperCase();
+                        if ("MOD".equals(rol)) {
+                            auth.promoteToModerator(token, emailDst);
+                        } else if ("ADMIN".equals(rol)) {
+                            auth.promoteToAdmin(token, emailDst);
+                        } else {
+                            throw new IllegalArgumentException("Rol inválido.");
+                        }
+                        System.out.println("✔ Rol actualizado.");
+                    }
+
 
                     case "9" -> {
                         ensureLoggedIn(currentUser);
