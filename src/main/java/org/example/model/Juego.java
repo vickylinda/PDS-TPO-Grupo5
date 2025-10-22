@@ -5,6 +5,9 @@ public class Juego {
     private String nombre;
     private String descripcion;
 
+    public Juego() {
+    }
+
     public Juego(int id, String nombre, String descripcion) {
         this.id = id;
         this.nombre = nombre;

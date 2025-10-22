@@ -43,51 +43,33 @@ public class Main {
                     === AUTENTICACIÓN ===
                     1) Registrar usuario
                     2) Login
-                    3) WhoAmI (requiere token)
-                    4) Logout
-                    5) Login con Google
-                                    
+                    3) Login con Google
+                    4) WhoAmI (requiere token)
+                    5) Listar usuarios (MOD/ADMIN)
+                    6) Promover a MOD/ADMIN (solo ADMIN)
+                    7) Logout
+                    
                     === PERFIL Y RANGOS ===
-                    6) Crear/Actualizar Perfil
-                    7) Agregar Rol Preferido
-                    8) Ver Mi Perfil
-                    9) Actualizar Puntaje (simular progresión)
-                    10) Ver Información de Rango
-                    11) Probar Sistema de Rangos (demo completo)
-                                    
+                    8) Crear/Actualizar Perfil
+                    9) Agregar Rol Preferido
+                    10) Ver Mi Perfil
+                    11) Actualizar Puntaje (simular progresión)
+                    12) Ver Información de Rango
+                    13) Probar Sistema de Rangos (demo completo)
+                    
                     === GESTIÓN DE SCRIMS ===
-                    12) Crear Scrim
-                    13) Ver Scrims Disponibles
-                    14) Unirse a un Scrim
-                    15) Confirmar Participación
-                    16) Iniciar Partida
-                    17) Finalizar Partida
-                    18) Cancelar Scrim
-                    19) Cargar Resultados
-                    20) Demo Completo de Scrim
-                                    
+                    14) Crear Scrim
+                    15) Ver Scrims Disponibles
+                    16) Unirse a un Scrim
+                    17) Confirmar Participación
+                    18) Iniciar Partida
+                    19) Finalizar Partida
+                    20) Cancelar Scrim
+                    21) Cargar Resultados
+                    22) Demo Completo de Scrim
+                   
                     0) Salir
                     """);
-                ====== MENU ======
-                === AUTENTICACIÓN ===
-                1) Registrar usuario
-                2) Login
-                3) WhoAmI (requiere token)
-                4) Logout
-                5) Login con Google
-                6) Listar usuarios (MOD/ADMIN)
-                7) Promover a MOD/ADMIN (solo ADMIN)
-                
-                === PERFIL Y RANGOS ===
-                6) Crear/Actualizar Perfil
-                7) Agregar Rol Preferido
-                8) Ver Mi Perfil
-                9) Actualizar Puntaje (simular progresión)
-                10) Ver Información de Rango
-                11) Probar Sistema de Rangos (demo completo)
-                
-                0) Salir
-                """);
             System.out.print("Opción: ");
             String op = sc.nextLine().trim();
 
@@ -110,14 +92,22 @@ public class Main {
                         String email = sc.nextLine().trim();
                         char[] pass = readPassword(console, sc, "Password: ");
                         token = auth.login(email, pass);
-                        // Cargar usuario actual
                         var userOpt = store.findUserByEmail(email);
-                        if (userOpt.isPresent()) {
-                            currentUser = userOpt.get();
-                        }
+                        if (userOpt.isPresent()) currentUser = userOpt.get();
                         System.out.println("✅ Login OK. Token:\n" + token);
                     }
                     case "3" -> {
+                        String clientId = System.getenv("GOOGLE_OAUTH_CLIENT_ID");
+                        String clientSecret = System.getenv("GOOGLE_OAUTH_CLIENT_SECRET");
+                        if (clientId == null || clientId.isBlank())
+                            throw new IllegalStateException("Configura GOOGLE_OAUTH_CLIENT_ID en variables de entorno.");
+                        token = auth.loginWithGoogle(clientId, clientSecret);
+                        // ⚠️ Cargar currentUser desde el JSON usando el email del token
+                        String email = auth.whoAmI(token);
+                        currentUser = store.findUserByEmail(email).orElseThrow();
+                        System.out.println("✅ Login Google OK. Token local:\n" + token);
+                    }
+                    case "4" -> {
                         ensureToken(token);
                         String email = auth.whoAmI(token);
                         var u = store.findUserByEmail(email).orElseThrow();
@@ -125,37 +115,51 @@ public class Main {
                         System.out.println("Rol: " + u.getRoleName());
                         System.out.println("Google: " + (u.isInicioSesionConGoogle() ? "Sí" : "No"));
                     }
-                    case "4" -> {
+                    case "5" -> {
+                        ensureToken(token);
+                        var list = auth.listUsers(token);
+                        System.out.println("=== Usuarios ===");
+                        for (var u : list) {
+                            System.out.printf("- %-30s  [%s]  google:%s%n",
+                                    u.getEmail(), u.getRoleName(), u.isInicioSesionConGoogle() ? "sí" : "no");
+                        }
+                    }
+                    case "6" -> {
+                        ensureToken(token);
+                        System.out.print("Email destino: ");
+                        String emailDst = sc.nextLine().trim();
+                        System.out.print("Nuevo rol (MOD/ADMIN): ");
+                        String rol = sc.nextLine().trim().toUpperCase();
+                        if ("MOD".equals(rol)) {
+                            auth.promoteToModerator(token, emailDst);
+                        } else if ("ADMIN".equals(rol)) {
+                            auth.promoteToAdmin(token, emailDst);
+                        } else {
+                            throw new IllegalArgumentException("Rol inválido.");
+                        }
+                        System.out.println("✔ Rol actualizado.");
+                    }
+                    case "7" -> {
                         token = null;
                         currentUser = null;
                         System.out.println("✅ Logout OK.");
                     }
-                    case "5" -> {
-                        String clientId = System.getenv("GOOGLE_OAUTH_CLIENT_ID");
-                        String clientSecret = System.getenv("GOOGLE_OAUTH_CLIENT_SECRET");
-                        if (clientId == null || clientId.isBlank())
-                            throw new IllegalStateException("Configura GOOGLE_OAUTH_CLIENT_ID en variables de entorno.");
-                        token = auth.loginWithGoogle(clientId, clientSecret);
-                        System.out.println("✅ Login Google OK. Token local:\n" + token);
-                    }
-
-                    case "6" -> {
+                    case "8" -> {
                         ensureLoggedIn(currentUser);
-
                         // Mostrar juegos disponibles
-                        System.out.println("\n🎮 Juegos disponibles:");
+                        System.out.println("\nJuegos disponibles:");
                         for (int i = 0; i < JUEGOS_DISPONIBLES.length; i++) {
                             System.out.println((i + 1) + ". " + JUEGOS_DISPONIBLES[i].getNombre() +
                                     " - " + JUEGOS_DISPONIBLES[i].getDescripcion());
                         }
                         System.out.print("Selecciona tu juego principal (1-" + JUEGOS_DISPONIBLES.length + "): ");
                         int juegoIdx = Integer.parseInt(sc.nextLine().trim()) - 1;
-
-                        if (juegoIdx < 0 || juegoIdx >= JUEGOS_DISPONIBLES.length) {
+                        if (juegoIdx < 0 || juegoIdx >= JUEGOS_DISPONIBLES.length)
                             throw new IllegalArgumentException("Opción de juego inválida.");
-                        }
-
                         Juego juegoSeleccionado = JUEGOS_DISPONIBLES[juegoIdx];
+
+                        System.out.print("Región (ej: LAN, NA, EUW): ");
+                        String regionElegida = sc.nextLine().trim().toUpperCase();
 
                         System.out.print("Disponibilidad horaria (ej: Noches 8pm-12am): ");
                         String disponibilidad = sc.nextLine().trim();
@@ -173,14 +177,15 @@ public class Main {
                             currentUser.getPerfil().setDisponibilidadHoraria(disponibilidad);
                             System.out.println("✅ Perfil actualizado.");
                         }
+                        currentUser.setRegion(regionElegida);
+                        store.updateUser(currentUser);
                         mostrarPerfil(currentUser);
                     }
-
-                    case "7" -> {
+                    case "9" -> {
                         ensureLoggedIn(currentUser);
                         ensurePerfil(currentUser);
 
-                        System.out.println("\n🎮 Roles disponibles:");
+                        System.out.println("\nRoles disponibles:");
                         System.out.println("1. Support - Rol de apoyo al equipo");
                         System.out.println("2. ADC - Tirador/Carry");
                         System.out.println("3. Mid - Línea central");
@@ -199,117 +204,70 @@ public class Main {
                         };
 
                         currentUser.getPerfil().agregarRolPreferido(rol);
+                        store.updateUser(currentUser);
+
                         System.out.println("✅ Rol agregado: " + rol.getNombre());
                         mostrarRolesPreferidos(currentUser);
                     }
-
-                    case "8" -> {
+                    case "10" -> {
                         ensureLoggedIn(currentUser);
                         ensurePerfil(currentUser);
                         mostrarPerfilCompleto(currentUser);
                     }
-                    case "6" -> {
-                        ensureToken(token);
-                        var list = auth.listUsers(token);
-                        System.out.println("=== Usuarios ===");
-                        for (var u : list) {
-                            System.out.printf("- %-30s  [%s]  google:%s%n",
-                                    u.getEmail(), u.getRoleName(), u.isInicioSesionConGoogle() ? "sí" : "no");
-                        }
-                    }
-
-                    case "7" -> {
-                        ensureToken(token);
-                        System.out.print("Email destino: ");
-                        String emailDst = sc.nextLine().trim();
-                        System.out.print("Nuevo rol (MOD/ADMIN): ");
-                        String rol = sc.nextLine().trim().toUpperCase();
-                        if ("MOD".equals(rol)) {
-                            auth.promoteToModerator(token, emailDst);
-                        } else if ("ADMIN".equals(rol)) {
-                            auth.promoteToAdmin(token, emailDst);
-                        } else {
-                            throw new IllegalArgumentException("Rol inválido.");
-                        }
-                        System.out.println("✔ Rol actualizado.");
-                    }
-
-
-                    case "9" -> {
+                    case "11" -> {
                         ensureLoggedIn(currentUser);
                         ensurePerfil(currentUser);
 
                         System.out.print("Ingresa el nuevo puntaje: ");
-                        int nuevoPuntaje = Integer.parseInt(sc.nextLine().trim());
+                        int delta = Integer.parseInt(sc.nextLine().trim());
 
                         String rangoAnterior = currentUser.getPerfil().getRango().getNombre();
-                        currentUser.getPerfil().actualizarPuntaje(nuevoPuntaje);
+                        currentUser.getPerfil().actualizarPuntaje(delta);
                         String rangoActual = currentUser.getPerfil().getRango().getNombre();
 
-                        System.out.println("\n📊 Actualización de puntaje:");
-                        System.out.println("   Puntaje: " + nuevoPuntaje);
-                        System.out.println("   Rango anterior: " + rangoAnterior);
-                        System.out.println("   Rango actual: " + rangoActual);
+                        store.updateUser(currentUser);
 
+                        System.out.println("\nActualización de puntaje:");
+                        System.out.println("  Puntaje total: " + currentUser.getPerfil().getPuntaje());
+                        System.out.println("  Rango anterior: " + rangoAnterior);
+                        System.out.println("  Rango actual:   " + rangoActual);
                         if (!rangoAnterior.equals(rangoActual)) {
-                            System.out.println("   🎉 ¡Has cambiado de rango!");
+                            System.out.println("¡Has cambiado de rango!");
                         }
                     }
-
-                    case "10" -> {
+                    case "12" -> {
                         ensureLoggedIn(currentUser);
                         ensurePerfil(currentUser);
                         mostrarInfoRango(currentUser);
                     }
-
-                    case "11" -> {
+                    case "13" -> {
                         demoSistemaRangos();
                     }
 
-                    // ===== NUEVAS OPCIONES DE SCRIM =====
-                    case "12" -> {
+                    // ===== SCRIMS (solo memoria) =====
+                    case "14" -> {
                         ensureLoggedIn(currentUser);
                         ensurePerfil(currentUser);
                         crearScrim(sc, currentUser);
                     }
-
-                    case "13" -> {
-                        verScrimsDisponibles();
-                    }
-
-                    case "14" -> {
+                    case "15" -> verScrimsDisponibles();
+                    case "16" -> {
                         ensureLoggedIn(currentUser);
                         ensurePerfil(currentUser);
                         unirseAScrim(sc, currentUser);
                     }
-
-                    case "15" -> {
+                    case "17" -> {
                         ensureLoggedIn(currentUser);
                         confirmarParticipacion(sc, currentUser);
                     }
-
-                    case "16" -> {
-                        iniciarPartida(sc);
-                    }
-
-                    case "17" -> {
-                        finalizarPartida(sc);
-                    }
-
-                    case "18" -> {
-                        cancelarScrim(sc);
-                    }
-
-                    case "19" -> {
-                        cargarResultados(sc);
-                    }
-
-                    case "20" -> {
-                        demoCompletoScrim();
-                    }
+                    case "18" -> iniciarPartida(sc);
+                    case "19" -> finalizarPartida(sc);
+                    case "20" -> cancelarScrim(sc);
+                    case "21" -> cargarResultados(sc);
+                    case "22" -> demoCompletoScrim();
 
                     case "0" -> {
-                        System.out.println("👋 ¡Hasta luego!");
+                        System.out.println("¡Hasta luego! :) ");
                         return;
                     }
                     default -> System.out.println("❌ Opción inválida.");
@@ -324,7 +282,7 @@ public class Main {
 
     private static void crearScrim(Scanner sc, User currentUser) {
         System.out.println("\n" + "=".repeat(60));
-        System.out.println("🎮 CREAR NUEVO SCRIM");
+        System.out.println("CREAR NUEVO SCRIM");
         System.out.println("=".repeat(60));
 
         // Seleccionar juego
@@ -342,11 +300,10 @@ public class Main {
 
         // Región
         System.out.print("Región (ej: LAN, NA, EUW): ");
-        String region = sc.nextLine().trim();
+        String region = sc.nextLine().trim().toUpperCase();
 
         // Fecha y hora
-        System.out.println("Fecha y hora de inicio (dejar vacío para ahora)");
-        System.out.print("Formato: yyyy-MM-dd HH:mm (ej: 2025-10-20 19:00): ");
+        System.out.println("Fecha y hora de inicio. Formato: yyyy-MM-dd HH:mm (ej: 2025-10-20 19:00):");
         String fechaStr = sc.nextLine().trim();
         LocalDateTime fechaHora;
         if (fechaStr.isEmpty()) {
@@ -382,14 +339,14 @@ public class Main {
         System.out.println("ID: " + scrim.getId());
         System.out.println("Estado: " + scrim.getNombreEstadoActual());
         System.out.println("Formato: " + scrim.getFormato());
-        System.out.println("Región: " + scrim.getRegion());
+        System.out.println("Región: " + scrim.getRegion().toUpperCase());
         System.out.println("Fecha: " + scrim.getFechaHora());
         System.out.println("Jugadores: " + scrim.getJugadoresActuales() + "/" + scrim.getCantidadTotalJugadores());
     }
 
     private static void verScrimsDisponibles() {
         System.out.println("\n" + "=".repeat(80));
-        System.out.println("📋 SCRIMS DISPONIBLES");
+        System.out.println("SCRIMS DISPONIBLES");
         System.out.println("=".repeat(80));
 
         if (scrims.isEmpty()) {
@@ -403,7 +360,7 @@ public class Main {
             System.out.println("    Estado: " + s.getNombreEstadoActual());
             System.out.println("    Juego: " + s.getJuego().getNombre());
             System.out.println("    Formato: " + s.getFormato());
-            System.out.println("    Región: " + s.getRegion());
+            System.out.println("    Región: " + s.getRegion().toUpperCase());
             System.out.println("    Jugadores: " + s.getJugadoresActuales() + "/" + s.getCantidadTotalJugadores());
             System.out.println("    Fecha: " + s.getFechaHora());
         }
@@ -546,13 +503,13 @@ public class Main {
 
     private static void demoCompletoScrim() {
         System.out.println("\n" + "=".repeat(80));
-        System.out.println("🎮 DEMO COMPLETO: CICLO DE VIDA DE UN SCRIM");
+        System.out.println("DEMO COMPLETO: CICLO DE VIDA DE UN SCRIM");
         System.out.println("=".repeat(80));
 
         // Crear usuarios de prueba
         List<User> usuarios = new ArrayList<>();
         for (int i = 1; i <= 10; i++) {
-            User user = new User();
+            RegularUser user = new RegularUser();
             user.setId("user-" + i);
             user.setEmail("jugador" + i + "@example.com");
             user.setRegion("LAN");
@@ -565,7 +522,7 @@ public class Main {
         }
 
         // 1. Crear scrim
-        System.out.println("\n📝 PASO 1: Creando scrim 5v5...");
+        System.out.println("\n PASO 1: Creando scrim 5v5...");
         Scrim scrim = ScrimBuilder.nuevo()
                 .juego(JUEGOS_DISPONIBLES[0])
                 .formato(5)
@@ -577,7 +534,7 @@ public class Main {
         System.out.println("   Estado: " + scrim.getNombreEstadoActual());
 
         // 2. Agregar jugadores
-        System.out.println("\n👥 PASO 2: Agregando jugadores...");
+        System.out.println("\nPASO 2: Agregando jugadores...");
         for (int i = 0; i < 10; i++) {
             scrim.agregarJugador(usuarios.get(i));
             System.out.println("   Jugador " + (i + 1) + " agregado - " +
@@ -586,24 +543,24 @@ public class Main {
         System.out.println("   Estado: " + scrim.getNombreEstadoActual());
 
         // 3. Confirmar jugadores
-        System.out.println("\n✅ PASO 3: Confirmando jugadores...");
+        System.out.println("\nPASO 3: Confirmando jugadores...");
         for (int i = 0; i < 10; i++) {
             scrim.confirmarJugador(usuarios.get(i));
         }
         System.out.println("   Estado: " + scrim.getNombreEstadoActual());
 
         // 4. Iniciar partida
-        System.out.println("\n🎮 PASO 4: Iniciando partida...");
+        System.out.println("\n PASO 4: Iniciando partida...");
         scrim.iniciarPartida();
         System.out.println("   Estado: " + scrim.getNombreEstadoActual());
 
         // 5. Finalizar partida
-        System.out.println("\n🏁 PASO 5: Finalizando partida...");
+        System.out.println("\n PASO 5: Finalizando partida...");
         scrim.finalizarPartida();
         System.out.println("   Estado: " + scrim.getNombreEstadoActual());
 
         // 6. Cargar resultados
-        System.out.println("\n📊 PASO 6: Cargando resultados...");
+        System.out.println("\n PASO 6: Cargando resultados...");
         Resultados resultados = new Resultados();
         resultados.registrarGanador("Equipo A");
 
@@ -620,7 +577,7 @@ public class Main {
 
         // Mostrar información final
         System.out.println("\n" + "=".repeat(80));
-        System.out.println("📋 INFORMACIÓN FINAL DEL SCRIM");
+        System.out.println(" INFORMACIÓN FINAL DEL SCRIM");
         System.out.println("=".repeat(80));
         scrim.mostrarInfo();
         System.out.println("Estado final: " + scrim.getNombreEstadoActual());
@@ -629,11 +586,11 @@ public class Main {
         System.out.println("=".repeat(80) + "\n");
 
         // Demo de cancelación
-        System.out.println("\n🚫 DEMO EXTRA: Intentando cancelar un scrim finalizado...");
+        System.out.println("\n DEMO EXTRA: Intentando cancelar un scrim finalizado...");
         scrim.cancelar();
 
         // Demo de crear y cancelar
-        System.out.println("\n🚫 DEMO EXTRA: Creando y cancelando un scrim...");
+        System.out.println("\n DEMO EXTRA: Creando y cancelando un scrim...");
         Scrim scrimCancelado = ScrimBuilder.nuevo()
                 .juego(JUEGOS_DISPONIBLES[1])
                 .formato(3)
@@ -666,15 +623,16 @@ public class Main {
 
     private static void ensurePerfil(User user) {
         if (user.getPerfil() == null)
-            throw new IllegalStateException("Debes crear un perfil primero (opción 6).");
+            throw new IllegalStateException("Debes crear un perfil primero (opción 8).");
     }
 
     private static void mostrarPerfil(User user) {
         Perfil p = user.getPerfil();
         System.out.println("\n" + "=".repeat(50));
-        System.out.println("📋 PERFIL DE " + user.getEmail());
+        System.out.println(" PERFIL DE " + user.getEmail());
         System.out.println("=".repeat(50));
         System.out.println("Juego principal: " + p.getJuegoPrincipal().getNombre());
+        System.out.println("Región: " + user.getRegion().toUpperCase());
         System.out.println("Disponibilidad: " + p.getDisponibilidadHoraria());
         System.out.println("Puntaje: " + p.getPuntaje());
         System.out.println("Rango: " + p.getRango().getNombre());
@@ -683,7 +641,7 @@ public class Main {
 
     private static void mostrarRolesPreferidos(User user) {
         Perfil p = user.getPerfil();
-        System.out.println("\n🎮 Roles preferidos:");
+        System.out.println("\n Roles preferidos:");
         if (p.getRolesPreferidos().isEmpty()) {
             System.out.println("   (ninguno)");
         } else {
@@ -697,7 +655,7 @@ public class Main {
     private static void mostrarPerfilCompleto(User user) {
         Perfil p = user.getPerfil();
         System.out.println("\n" + "=".repeat(60));
-        System.out.println("📋 PERFIL COMPLETO DE " + user.getEmail());
+        System.out.println(" PERFIL COMPLETO DE " + user.getEmail());
         System.out.println("=".repeat(60));
         System.out.println("ID: " + user.getId());
         System.out.println("Email: " + user.getEmail());
@@ -707,6 +665,7 @@ public class Main {
         System.out.println("--- Información del Perfil ---");
         System.out.println("Juego principal: " + p.getJuegoPrincipal().getNombre());
         System.out.println("Descripción: " + p.getJuegoPrincipal().getDescripcion());
+        System.out.println("Región: " + user.getRegion().toUpperCase());
         System.out.println("Disponibilidad: " + p.getDisponibilidadHoraria());
         System.out.println("Puntaje: " + p.getPuntaje());
         System.out.println();
@@ -731,7 +690,7 @@ public class Main {
         var rango = p.getRango();
 
         System.out.println("\n" + "=".repeat(50));
-        System.out.println("🏆 INFORMACIÓN DE RANGO");
+        System.out.println(" INFORMACIÓN DE RANGO");
         System.out.println("=".repeat(50));
         System.out.println("Rango actual: " + rango.getNombre());
         System.out.println("Nivel: " + rango.getValorNivel());
@@ -749,7 +708,7 @@ public class Main {
 
     private static void demoSistemaRangos() {
         System.out.println("\n" + "=".repeat(60));
-        System.out.println("🎮 DEMO: SISTEMA DE RANGOS");
+        System.out.println(" DEMO: SISTEMA DE RANGOS");
         System.out.println("=".repeat(60));
 
         // Crear un perfil de prueba con un juego
@@ -763,7 +722,7 @@ public class Main {
         System.out.println("Perfil de demostración creado:");
         System.out.println("  • Juego: " + perfil.getJuegoPrincipal().getNombre());
         System.out.println("  • Roles: " + perfil.getRolesPreferidos().size() + " roles preferidos");
-        System.out.println("\n📊 Simulando progresión de rangos...\n");
+        System.out.println("\n Simulando progresión de rangos...\n");
 
         // Simular progresión
         int[] puntajes = {0, 500, 1200, 2100, 2800, 3500, 2500, 900};
@@ -802,6 +761,11 @@ public class Main {
             case "Bronce" -> 2;
             case "Plata" -> 3;
             case "Oro" -> 4;
+            case "Platino" -> 5;
+            case "Diamante" -> 6;
+            case "Ascendente" -> 7;
+            case "Inmortal" -> 8;
+            case "Radiante" -> 9;
             default -> 0;
         };
     }

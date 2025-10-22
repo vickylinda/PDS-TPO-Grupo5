@@ -1,112 +1,93 @@
 package org.example.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@JsonIgnoreProperties({"rango"}) // por si aparece en un JSON viejo, ignorar la propiedad
 public class Perfil {
     private int id;
     private Juego juegoPrincipal;
     private List<Rol> rolesPreferidos;
     private String disponibilidadHoraria;
+
+    @JsonIgnore
     private IRangoState rango;
-    private int puntaje; // Para gestionar el puntaje actual del jugador
+
+    private int puntaje;
 
     public Perfil() {
         this.rolesPreferidos = new ArrayList<>();
-        this.rango = new RangoHierro(this); // Por defecto empieza en Hierro
         this.puntaje = 0;
+        this.rango = RangoFactory.fromPuntaje(this); // valor inicial coherente
     }
 
     public Perfil(int id, Juego juegoPrincipal, String disponibilidadHoraria) {
+        this();
         this.id = id;
         this.juegoPrincipal = juegoPrincipal;
         this.disponibilidadHoraria = disponibilidadHoraria;
-        this.rolesPreferidos = new ArrayList<>();
-        this.rango = new RangoHierro(this);
-        this.puntaje = 0;
     }
 
-    // Método para actualizar el puntaje y cambiar de rango si es necesario
-    public void actualizarPuntaje(int nuevoPuntaje) {
-        this.puntaje = nuevoPuntaje;
-
-        // Verificar si debe subir de rango
-        if (nuevoPuntaje > rango.getPuntajeMax()) {
-            rango.upgrade();
-        }
-        // Verificar si debe bajar de rango
-        else if (nuevoPuntaje < rango.getPuntajeMin() && rango.getValorNivel() > 1) {
-            rango.downgrade();
-        }
+    /** Suma al puntaje actual (delta puede ser +/-) y ajusta rango. */
+    public void actualizarPuntaje(int delta) {
+        this.puntaje += delta;
+        if (this.puntaje < 0) this.puntaje = 0;
+        recomputarRango();
     }
 
-    public void agregarRolPreferido(Rol rol) {
-        if (!rolesPreferidos.contains(rol)) {
-            rolesPreferidos.add(rol);
-        }
+    /** Reasigna el estado de rango según el puntaje actual. */
+    private void recomputarRango() {
+        this.rango = RangoFactory.fromPuntaje(this);
     }
 
-    public void eliminarRolPreferido(Rol rol) {
-        rolesPreferidos.remove(rol);
-    }
+    // --- getters/setters básicos ---
 
-    // Getters y Setters
-    public int getId() {
-        return id;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    public Juego getJuegoPrincipal() { return juegoPrincipal; }
+    public void setJuegoPrincipal(Juego juegoPrincipal) { this.juegoPrincipal = juegoPrincipal; }
 
-    public Juego getJuegoPrincipal() {
-        return juegoPrincipal;
-    }
+    public List<Rol> getRolesPreferidos() { return rolesPreferidos; }
+    public void setRolesPreferidos(List<Rol> rolesPreferidos) { this.rolesPreferidos = rolesPreferidos; }
 
-    public void setJuegoPrincipal(Juego juegoPrincipal) {
-        this.juegoPrincipal = juegoPrincipal;
-    }
+    public String getDisponibilidadHoraria() { return disponibilidadHoraria; }
+    public void setDisponibilidadHoraria(String disponibilidadHoraria) { this.disponibilidadHoraria = disponibilidadHoraria; }
 
-    public List<Rol> getRolesPreferidos() {
-        return rolesPreferidos;
-    }
-
-    public void setRolesPreferidos(List<Rol> rolesPreferidos) {
-        this.rolesPreferidos = rolesPreferidos;
-    }
-
-    public String getDisponibilidadHoraria() {
-        return disponibilidadHoraria;
-    }
-
-    public void setDisponibilidadHoraria(String disponibilidadHoraria) {
-        this.disponibilidadHoraria = disponibilidadHoraria;
-    }
-
+    /** Getter “lazy”: si rango es null (p. ej. recién cargado del JSON), se reconstruye. */
     public IRangoState getRango() {
+        if (rango == null) {
+            rango = RangoFactory.fromPuntaje(this);
+        }
         return rango;
     }
 
-    public void setRango(IRangoState rango) {
-        this.rango = rango;
-    }
+    @JsonIgnore // evitá que Jackson intente setear la interfaz
+    public void setRango(IRangoState rango) { this.rango = rango; }
 
-    public int getPuntaje() {
-        return puntaje;
-    }
+    public int getPuntaje() { return puntaje; }
 
+    /** Si Jackson setea el puntaje desde el JSON, recalculá el rango. */
     public void setPuntaje(int puntaje) {
-        this.puntaje = puntaje;
+        this.puntaje = Math.max(0, puntaje);
+        recomputarRango();
     }
 
-    @Override
-    public String toString() {
+    public void agregarRolPreferido(Rol rol) {
+        if (!rolesPreferidos.contains(rol)) rolesPreferidos.add(rol);
+    }
+    public void eliminarRolPreferido(Rol rol) { rolesPreferidos.remove(rol); }
+
+    @Override public String toString() {
         return "Perfil{" +
                 "id=" + id +
-                ", juegoPrincipal='" + juegoPrincipal + '\'' +
+                ", juegoPrincipal=" + (juegoPrincipal != null ? juegoPrincipal.getNombre() : "-") +
                 ", rolesPreferidos=" + rolesPreferidos.size() +
                 ", disponibilidadHoraria='" + disponibilidadHoraria + '\'' +
-                ", rango=" + rango.getNombre() +
+                ", rango=" + getRango().getNombre() +
                 ", puntaje=" + puntaje +
                 '}';
     }

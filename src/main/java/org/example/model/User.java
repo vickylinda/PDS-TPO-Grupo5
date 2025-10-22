@@ -46,6 +46,8 @@ public abstract class User {
     public void setSaltBase64(String saltBase64) { this.saltBase64 = saltBase64; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+    public String getRegion() {return region;}
+    public void setRegion(String region) {this.region = region;}
 
     public boolean isInicioSesionConGoogle() {
         return inicioSesionConGoogle != null ? inicioSesionConGoogle : false;
@@ -60,7 +62,5 @@ public abstract class User {
     public Perfil getPerfil() {return perfil;}
     public void setPerfil(Perfil perfil) {this.perfil = perfil;}
 
-    public String getRegion() {return region;}
 
-    public void setRegion(String region) {this.region = region;}
 }

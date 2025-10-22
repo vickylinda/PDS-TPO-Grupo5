@@ -328,8 +328,14 @@ public class Scrim {
         System.out.println("\n=== INFORMACIÓN DEL SCRIM ===");
         System.out.println("ID: " + id);
         System.out.println("Estado: " + estado.getNombreEstado());
+        System.out.println("Juego: " + juego.getNombre());
         System.out.println("Modalidad: " + jugadoresPorLado + " vs " + jugadoresPorLado);
-        System.out.println("Fecha/Hora inicio: " + fechaInicio);
+        System.out.println("Región: " + region);
+        // la fecha programada
+        System.out.println("Fecha programada: " + (fechaHora != null ? fechaHora : "-"));
+        //  tendrán valor luego de iniciar/finalizar
+        System.out.println("Fecha/Hora inicio: " + (fechaInicio != null ? fechaInicio : "-"));
+        System.out.println("Fecha/Hora fin: " + (fechaFinalizacion != null ? fechaFinalizacion : "-"));
         System.out.println("\nEquipo A (" + equipoA.size() + "/" + jugadoresPorLado + "):");
         equipoA.forEach(u -> System.out.println("  - " + u.getEmail()));
         System.out.println("\nEquipo B (" + equipoB.size() + "/" + jugadoresPorLado + "):");

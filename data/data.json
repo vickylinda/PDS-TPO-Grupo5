@@ -1,38 +1,45 @@
 {
   "users" : [ {
-    "type" : "ADMIN",
-    "id" : "98879af3-5e3d-4cef-ae7c-484f28fd4932",
+    "type" : "USER",
+    "id" : "2325b043-28bd-4fc4-a3d9-b84ff64a1a1e",
     "email" : "vickylinda@gmail.com",
-    "passwordHash" : "vyZcqKknkqFf5XKZWDQeWF3YMevsGGA9AKTD23Yyidc=",
-    "saltBase64" : "iAfucXF+0fE6VKvHz12VAQ==",
+    "passwordHash" : "cb2KF75/JbZIRt7q5XHbaC2Q14w1bRXRZIiZGdSZiiU=",
+    "saltBase64" : "pVWdCS0CIp0QU/pVrmrCjA==",
     "active" : true,
     "inicioSesionConGoogle" : false,
-    "perfil" : null
+    "perfil" : {
+      "id" : 589672515,
+      "juegoPrincipal" : {
+        "nombre" : "Valorant",
+        "descripcion" : "FPS táctico 5v5"
+      },
+      "rolesPreferidos" : [ {
+        "id" : 2,
+        "nombre" : "ADC",
+        "descripcion" : "Tirador/Carry"
+      } ],
+      "disponibilidadHoraria" : "12pm",
+      "puntaje" : 2500
+    },
+    "region" : "LAN"
   }, {
     "type" : "USER",
-    "id" : "d32b47c5-9d09-4fc4-922c-93baf1adfd53",
+    "id" : "7298a798-06fe-4ab3-b6e2-b60cb314db0e",
     "email" : "vicky9abril@gmail.com",
     "passwordHash" : "",
     "saltBase64" : "",
     "active" : true,
-    "inicioSesionConGoogle" : true
-  }, {
-    "type" : "MOD",
-    "id" : "daf91d56-006b-4902-a61b-2f02318c93e3",
-    "email" : "vicky@gmail.com",
-    "passwordHash" : "7m9y8zZYpwsD0c6Fic1LVDysY7XnTqLqqQvPaivcMF4=",
-    "saltBase64" : "ITOOJ6gp410jAVo38LLUOw==",
-    "active" : true,
-    "inicioSesionConGoogle" : false
     "inicioSesionConGoogle" : true,
-    "perfil" : null
-  }, {
-    "id" : "74dab48a-a440-4c75-85e7-b319ea381867",
-    "email" : "mery@gmail.com",
-    "passwordHash" : "1AWpC1qphY6d7nxq35kgl4c2UWRAwpgQcFkdrk8RqWY=",
-    "saltBase64" : "vqHKHzJ+MRJ/HBxqs63t0A==",
-    "active" : true,
-    "inicioSesionConGoogle" : false,
-    "perfil" : null
+    "perfil" : {
+      "id" : 1922607000,
+      "juegoPrincipal" : {
+        "nombre" : "League of Legends",
+        "descripcion" : "MOBA 5v5 competitivo"
+      },
+      "rolesPreferidos" : [ ],
+      "disponibilidadHoraria" : "12pm",
+      "puntaje" : 100000
+    },
+    "region" : "LAN"
   } ]
 }
