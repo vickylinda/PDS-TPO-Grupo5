@@ -62,4 +62,27 @@ public class JsonStore {
 
     //para saber dónde quedo grabado el archivo
     public static Path dataFilePath() { return DATA_FILE.toAbsolutePath(); }
+
+    public java.util.List<org.example.model.User> findAllUsers() {
+        lock.readLock().lock();
+        try { return new java.util.ArrayList<>(db.users); }
+        finally { lock.readLock().unlock(); }
+    }
+
+    public void updateUser(org.example.model.User updated) throws java.io.IOException {
+        lock.writeLock().lock();
+        try {
+            for (int i = 0; i < db.users.size(); i++) {
+                var u = db.users.get(i);
+                if (u.getId().equals(updated.getId())) {
+                    db.users.set(i, updated);
+                    save();
+                    return;
+                }
+            }
+            throw new IllegalArgumentException("Usuario no encontrado: " + updated.getEmail());
+        } finally { lock.writeLock().unlock(); }
+    }
+
 }
+

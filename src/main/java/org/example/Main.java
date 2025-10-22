@@ -25,6 +25,8 @@ public class Main {
                 3) WhoAmI (requiere token)
                 4) Logout
                 5) Login con Google
+                6) Listar usuarios (MOD/ADMIN)
+                7) Promover a MOD/ADMIN (solo ADMIN)
                 0) Salir
                 """);
             System.out.print("Opción: ");
@@ -54,20 +56,46 @@ public class Main {
                     case "3" -> {
                         ensureToken(token);
                         String email = auth.whoAmI(token);
-                        var userOpt = new org.example.store.JsonStore().findUserByEmail(email);
-                        boolean conGoogle = userOpt.isPresent() && userOpt.get().isInicioSesionConGoogle();
-                        System.out.println("Usuario: " + email);
-                        System.out.println("Inicio de sesión con Google: " + (conGoogle ? "Sí" : "No"));
+                        var u = store.findUserByEmail(email).orElseThrow();
+                        System.out.println("Usuario: " + u.getEmail());
+                        System.out.println("Rol: " + u.getRoleName());
+                        System.out.println("Google: " + (u.isInicioSesionConGoogle() ? "Sí" : "No"));
                     }
                     case "4" -> { token = null; System.out.println("Logout OK."); }
                     case "5" -> {
                         String clientId = System.getenv("GOOGLE_OAUTH_CLIENT_ID");
-                        String clientSecret = System.getenv("GOOGLE_OAUTH_CLIENT_SECRET"); // puede ser null
+                        String clientSecret = System.getenv("GOOGLE_OAUTH_CLIENT_SECRET");
                         if (clientId == null || clientId.isBlank())
                             throw new IllegalStateException("Configura GOOGLE_OAUTH_CLIENT_ID en variables de entorno.");
                         token = auth.loginWithGoogle(clientId, clientSecret);
                         System.out.println("Login Google OK. Token local:\n" + token);
                     }
+                    case "6" -> {
+                        ensureToken(token);
+                        var list = auth.listUsers(token);
+                        System.out.println("=== Usuarios ===");
+                        for (var u : list) {
+                            System.out.printf("- %-30s  [%s]  google:%s%n",
+                                    u.getEmail(), u.getRoleName(), u.isInicioSesionConGoogle() ? "sí" : "no");
+                        }
+                    }
+
+                    case "7" -> {
+                        ensureToken(token);
+                        System.out.print("Email destino: ");
+                        String emailDst = sc.nextLine().trim();
+                        System.out.print("Nuevo rol (MOD/ADMIN): ");
+                        String rol = sc.nextLine().trim().toUpperCase();
+                        if ("MOD".equals(rol)) {
+                            auth.promoteToModerator(token, emailDst);
+                        } else if ("ADMIN".equals(rol)) {
+                            auth.promoteToAdmin(token, emailDst);
+                        } else {
+                            throw new IllegalArgumentException("Rol inválido.");
+                        }
+                        System.out.println("✔ Rol actualizado.");
+                    }
+
 
                     case "0" -> { System.out.println("Chau!"); return; }
                     default -> System.out.println("Opción inválida.");
