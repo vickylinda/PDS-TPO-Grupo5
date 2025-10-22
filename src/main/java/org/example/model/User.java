@@ -17,6 +17,9 @@ public abstract class User {
     private boolean active = true;
     private Boolean inicioSesionConGoogle = false;
 
+    private Perfil perfil;
+    private String region;
+
     public User() {}
 
     public User(String id, String email, String passwordHash, String saltBase64) {
@@ -53,4 +56,11 @@ public abstract class User {
     //roles por herencia
     @com.fasterxml.jackson.annotation.JsonIgnore
     public abstract String getRoleName();
+
+    public Perfil getPerfil() {return perfil;}
+    public void setPerfil(Perfil perfil) {this.perfil = perfil;}
+
+    public String getRegion() {return region;}
+
+    public void setRegion(String region) {this.region = region;}
 }

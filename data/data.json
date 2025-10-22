@@ -6,7 +6,8 @@
     "passwordHash" : "vyZcqKknkqFf5XKZWDQeWF3YMevsGGA9AKTD23Yyidc=",
     "saltBase64" : "iAfucXF+0fE6VKvHz12VAQ==",
     "active" : true,
-    "inicioSesionConGoogle" : false
+    "inicioSesionConGoogle" : false,
+    "perfil" : null
   }, {
     "type" : "USER",
     "id" : "d32b47c5-9d09-4fc4-922c-93baf1adfd53",
@@ -23,5 +24,15 @@
     "saltBase64" : "ITOOJ6gp410jAVo38LLUOw==",
     "active" : true,
     "inicioSesionConGoogle" : false
+    "inicioSesionConGoogle" : true,
+    "perfil" : null
+  }, {
+    "id" : "74dab48a-a440-4c75-85e7-b319ea381867",
+    "email" : "mery@gmail.com",
+    "passwordHash" : "1AWpC1qphY6d7nxq35kgl4c2UWRAwpgQcFkdrk8RqWY=",
+    "saltBase64" : "vqHKHzJ+MRJ/HBxqs63t0A==",
+    "active" : true,
+    "inicioSesionConGoogle" : false,
+    "perfil" : null
   } ]
 }
