@@ -1,6 +1,15 @@
 package org.example.model;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-public class User {
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = RegularUser.class, name = "USER"),
+        @JsonSubTypes.Type(value = Moderator.class,  name = "MOD"),
+        @JsonSubTypes.Type(value = Admin.class,      name = "ADMIN")
+})
+
+public abstract class User {
     private String id;
     private String email;
     private String passwordHash;
@@ -44,6 +53,9 @@ public class User {
     public void setInicioSesionConGoogle(Boolean inicioSesionConGoogle) {
         this.inicioSesionConGoogle = inicioSesionConGoogle;
     }
+    //roles por herencia
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public abstract String getRoleName();
 
     public Perfil getPerfil() {return perfil;}
     public void setPerfil(Perfil perfil) {this.perfil = perfil;}

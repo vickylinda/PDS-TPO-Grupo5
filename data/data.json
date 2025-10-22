@@ -1,18 +1,29 @@
 {
   "users" : [ {
-    "id" : "202413a7-6fdb-46cc-b7c8-a255c61035a5",
+    "type" : "ADMIN",
+    "id" : "98879af3-5e3d-4cef-ae7c-484f28fd4932",
     "email" : "vickylinda@gmail.com",
-    "passwordHash" : "fGn+U6YUs7qAt+pIXknQEBtjZYdRWslR4bg+UOJwYUY=",
-    "saltBase64" : "N8/teQnnw+vYUawVcDY7+A==",
+    "passwordHash" : "vyZcqKknkqFf5XKZWDQeWF3YMevsGGA9AKTD23Yyidc=",
+    "saltBase64" : "iAfucXF+0fE6VKvHz12VAQ==",
     "active" : true,
     "inicioSesionConGoogle" : false,
     "perfil" : null
   }, {
-    "id" : "87811ce3-905b-4551-821e-b35353686708",
+    "type" : "USER",
+    "id" : "d32b47c5-9d09-4fc4-922c-93baf1adfd53",
     "email" : "vicky9abril@gmail.com",
     "passwordHash" : "",
     "saltBase64" : "",
     "active" : true,
+    "inicioSesionConGoogle" : true
+  }, {
+    "type" : "MOD",
+    "id" : "daf91d56-006b-4902-a61b-2f02318c93e3",
+    "email" : "vicky@gmail.com",
+    "passwordHash" : "7m9y8zZYpwsD0c6Fic1LVDysY7XnTqLqqQvPaivcMF4=",
+    "saltBase64" : "ITOOJ6gp410jAVo38LLUOw==",
+    "active" : true,
+    "inicioSesionConGoogle" : false
     "inicioSesionConGoogle" : true,
     "perfil" : null
   }, {
