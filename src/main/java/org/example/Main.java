@@ -2,6 +2,7 @@ package org.example;
 
 import org.example.model.*;
 import org.example.service.AuthService;
+import org.example.service.MatchmakingService;
 import org.example.store.JsonStore;
 
 import java.io.Console;
@@ -548,6 +549,43 @@ public class Main {
             scrim.confirmarJugador(usuarios.get(i));
         }
         System.out.println("   Estado: " + scrim.getNombreEstadoActual());
+        // 3.5. Emparejamiento automático con estrategias
+System.out.println("\nPASO 3.5: Emparejamiento automático (Matchmaking)\n");
+
+MatchmakingService matchmaking = new MatchmakingService();
+
+// Estrategia 1: Por MMR
+System.out.println("→ Estrategia: ByMMRStrategy (rango ±300)");
+matchmaking.setStrategy(new ByMMRStrategy(300));
+List<User> seleccionMMR = matchmaking.emparejarJugadores(scrim, usuarios);
+System.out.println("Jugadores seleccionados por MMR: " + seleccionMMR.size());
+for (User u : seleccionMMR) {
+    System.out.println("   • " + u.getEmail() + " | Puntaje: " + u.getPerfil().getPuntaje());
+}
+
+// Estrategia 2: Por Latencia
+System.out.println("\n→ Estrategia: ByLatencyStrategy (umbral 100ms)");
+matchmaking.setStrategy(new ByLatencyStrategy(100));
+List<User> seleccionLatencia = matchmaking.emparejarJugadores(scrim, usuarios);
+System.out.println("Jugadores seleccionados por Latencia: " + seleccionLatencia.size());
+
+// Estrategia 3: Híbrida (FairPlay y Abandonos)
+System.out.println("\n→ Estrategia: HybridStrategy (pesoAbandonos=0.4, pesoFairPlay=1.0)");
+matchmaking.setStrategy(new HybridStrategy(0.4, 1.0));
+List<User> seleccionHybrid = matchmaking.emparejarJugadores(scrim, usuarios);
+System.out.println("Jugadores seleccionados por FairPlay/Reputación: " + seleccionHybrid.size());
+
+        // Armar equipos finales con los jugadores seleccionados por MMR
+        System.out.println("\n→ Armando equipos equilibrados con los jugadores seleccionados...");
+        var equipos = matchmaking.armarEquipos(seleccionMMR, scrim);
+        for (Equipo e : equipos) {
+            System.out.println("Equipo: " + e.getNombre());
+            for (User jugador : e.getJugadores()) {
+                System.out.println("   - " + jugador.getEmail());
+            }
+        }
+        System.out.println("\n✅ Emparejamiento automático finalizado.\n");
+
 
         // 4. Iniciar partida
         System.out.println("\n PASO 4: Iniciando partida...");
