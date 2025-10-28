@@ -1,4 +1,6 @@
-package org.example.model;
+package org.example.model.user.rango;
+
+import org.example.model.user.Perfil;
 
 public class RangoOro implements IRangoState {
     private final Perfil perfil;

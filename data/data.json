@@ -41,5 +41,24 @@
       "puntaje" : 100000
     },
     "region" : "LAN"
+  }, {
+    "type" : "USER",
+    "id" : "43ba2452-33d0-4ee9-a2f8-1059d9ba3abf",
+    "email" : "mery@gmail.com",
+    "passwordHash" : "+VBxn4qZh3msSCs1sMPy+SIVO8MgThSyYnyavpY8n/k=",
+    "saltBase64" : "cwM2KolepeLGXf6BnQsMMg==",
+    "active" : true,
+    "inicioSesionConGoogle" : false,
+    "perfil" : {
+      "id" : 1136272466,
+      "juegoPrincipal" : {
+        "nombre" : "League of Legends",
+        "descripcion" : "MOBA 5v5 competitivo"
+      },
+      "rolesPreferidos" : [ ],
+      "disponibilidadHoraria" : "8pm-12am",
+      "puntaje" : 0
+    },
+    "region" : "LAN"
   } ]
 }

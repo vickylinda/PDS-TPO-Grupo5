@@ -1,4 +1,10 @@
-package org.example.model;
+package org.example.model.scrim.state;
+
+import org.example.model.Resultados;
+import org.example.model.scrim.Scrim;
+import org.example.model.scrim.state.CanceladoState;
+import org.example.model.scrim.state.IScrimState;
+import org.example.model.user.User;
 
 public abstract class ScrimStateBase implements IScrimState {
     protected Scrim scrim;

@@ -1,7 +1,10 @@
-package org.example.model;
+package org.example.model.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.example.model.user.rango.IRangoState;
+import org.example.model.Juego;
+import org.example.model.user.rango.RangoFactory;
 
 import java.util.ArrayList;
 import java.util.List;

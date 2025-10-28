@@ -1,6 +1,8 @@
 package org.example.service;
 
-import org.example.model.User;
+import org.example.model.user.Admin;
+import org.example.model.user.RegularUser;
+import org.example.model.user.User;
 import org.example.security.JwtUtils;
 import org.example.security.PasswordUtils;
 import org.example.security.ValidationUtils;
@@ -43,7 +45,7 @@ public class AuthService {
         String hashB64 = PasswordUtils.hashToBase64(password, salt);
 
 
-        User u = new org.example.model.RegularUser(
+        User u = new RegularUser(
                 java.util.UUID.randomUUID().toString(), email, hashB64, saltB64);
         u.setInicioSesionConGoogle(false);
         store.addUser(u);
@@ -122,12 +124,12 @@ public class AuthService {
 
         // 4) upsert usuario en json por email (sin password local)
         var opt = store.findUserByEmail(email);
-        org.example.model.User u;
+        User u;
         if (opt.isPresent()) {
             u = opt.get();
             u.setInicioSesionConGoogle(true);
         } else {
-            u = new org.example.model.RegularUser(UUID.randomUUID().toString(), email, "", "");
+            u = new RegularUser(UUID.randomUUID().toString(), email, "", "");
             u.setInicioSesionConGoogle(true);
             store.addUser(u);
         }
@@ -148,7 +150,7 @@ public class AuthService {
         return 1; // USER/null
     }
 
-    public java.util.List<org.example.model.User> listUsers(String token) {
+    public java.util.List<User> listUsers(String token) {
         requireRoleAtLeast(token, "MOD"); // MOD o ADMIN
         return store.findAllUsers();
     }
@@ -167,7 +169,7 @@ public class AuthService {
         requireRoleAtLeast(token, "ADMIN");
         var u = store.findUserByEmail(emailDestino)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado: " + emailDestino));
-        var nuevo = new org.example.model.Admin(u.getId(), u.getEmail(), u.getPasswordHash(), u.getSaltBase64());
+        var nuevo = new Admin(u.getId(), u.getEmail(), u.getPasswordHash(), u.getSaltBase64());
         nuevo.setActive(u.isActive());
         nuevo.setInicioSesionConGoogle(u.isInicioSesionConGoogle());
         store.updateUser(nuevo);

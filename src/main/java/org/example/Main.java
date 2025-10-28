@@ -1,6 +1,12 @@
 package org.example;
 
 import org.example.model.*;
+import org.example.model.scrim.Scrim;
+import org.example.model.scrim.ScrimBuilder;
+import org.example.model.user.Perfil;
+import org.example.model.user.RegularUser;
+import org.example.model.user.Rol;
+import org.example.model.user.User;
 import org.example.service.AuthService;
 import org.example.store.JsonStore;
 
