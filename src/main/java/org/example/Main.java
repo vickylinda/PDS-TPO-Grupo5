@@ -1,5 +1,10 @@
 package org.example;
 
+import org.example.service.MatchmakingService;
+import org.example.model.scrim.matchmaking.MatchmakingStrategy;
+import org.example.model.scrim.matchmaking.ByMMRStrategy;
+import org.example.model.scrim.matchmaking.ByLatencyStrategy;
+
 import org.example.model.*;
 import org.example.model.scrim.Scrim;
 import org.example.model.scrim.ScrimBuilder;
@@ -73,6 +78,12 @@ public class Main {
                     20) Cancelar Scrim
                     21) Cargar Resultados
                     22) Demo Completo de Scrim
+                    
+                    === MATCHMAKING ===
+                    23) Demo Matchmaking por MMR
+                    24) Demo Matchmaking por Latencia
+                    25) Comparar Estrategias de Matchmaking
+                    26) Buscar Jugadores para Scrim (interactivo)
                    
                     0) Salir
                     """);
@@ -271,6 +282,14 @@ public class Main {
                     case "20" -> cancelarScrim(sc);
                     case "21" -> cargarResultados(sc);
                     case "22" -> demoCompletoScrim();
+
+                    case "23" -> demoMatchmakingPorMMR();
+                    case "24" -> demoMatchmakingPorLatencia();
+                    case "25" -> compararEstrategiasMatchmaking();
+                    case "26" -> {
+                        ensureLoggedIn(currentUser);
+                        buscarJugadoresParaScrim(sc, currentUser);
+                    }
 
                     case "0" -> {
                         System.out.println("¡Hasta luego! :) ");
@@ -775,4 +794,501 @@ public class Main {
             default -> 0;
         };
     }
+
+    // METODOS DEMO MATCHMAKING
+    private static void demoMatchmakingPorMMR() {
+        System.out.println("\n" + "=".repeat(80));
+        System.out.println("DEMO: MATCHMAKING POR MMR/RANGO");
+        System.out.println("=".repeat(80));
+
+        // Crear usuarios de prueba con diferentes MMR
+        List<User> candidatos = crearUsuariosPruebaMMR();
+
+        // Crear un scrim con requisitos de rango
+        System.out.println("\n📋 Creando scrim con requisitos:");
+        Scrim scrim = ScrimBuilder.nuevo()
+                .juego(JUEGOS_DISPONIBLES[0])  // League of Legends
+                .formato(5)                      // 5v5
+                .region("LAN")
+                .rango(1000, 2000)              // Solo jugadores entre 1000-2000 MMR
+                .fechaHora(LocalDateTime.now().plusHours(2))
+                .build();
+
+        System.out.println("   Juego: " + scrim.getJuego().getNombre());
+        System.out.println("   Formato: " + scrim.getFormato());
+        System.out.println("   Rango requerido: " + scrim.getRangoMin() + " - " + scrim.getRangoMax());
+        System.out.println("   Jugadores necesarios: " + scrim.getCantidadTotalJugadores());
+
+        // Mostrar candidatos
+        System.out.println("\n👥 Candidatos disponibles:");
+        for (int i = 0; i < candidatos.size(); i++) {
+            User u = candidatos.get(i);
+            System.out.printf("   %2d. %-25s | MMR: %4d | Región: %s%n",
+                    i+1, u.getEmail(), u.getPerfil().getPuntaje(), u.getRegion());
+        }
+
+        // Crear servicio de matchmaking con estrategia MMR
+        System.out.println("\n⚙️  Configurando estrategia de matchmaking...");
+        MatchmakingStrategy estrategia = new ByMMRStrategy(500); // Diferencia máxima: 500 MMR
+        MatchmakingService matchmaking = new MatchmakingService(estrategia);
+
+        System.out.println("   Estrategia: ByMMRStrategy");
+        System.out.println("   Diferencia máxima permitida: 500 MMR");
+
+        // Realizar matchmaking
+        System.out.println("\n🔍 Buscando los mejores jugadores...");
+        List<User> seleccionados = matchmaking.emparejarJugadores(scrim, candidatos);
+
+        // Mostrar resultados
+        System.out.println("\n✅ Jugadores seleccionados (ordenados por compatibilidad):");
+        if (seleccionados.isEmpty()) {
+            System.out.println("   ❌ No se encontraron jugadores compatibles");
+        } else {
+            for (int i = 0; i < seleccionados.size(); i++) {
+                User u = seleccionados.get(i);
+                double score = matchmaking.evaluarCompatibilidad(u, scrim);
+                System.out.printf("   %2d. %-25s | MMR: %4d | Compatibilidad: %.1f/100%n",
+                        i+1, u.getEmail(), u.getPerfil().getPuntaje(), score);
+            }
+
+            // Formar equipos
+            System.out.println("\n👥 Formando equipos balanceados...");
+            var resultado = matchmaking.armarEquipos(seleccionados, scrim);
+
+            System.out.println("\n🔵 EQUIPO A:");
+            for (User u : resultado.getEquipoA()) {
+                System.out.printf("   • %-25s (MMR: %d)%n", u.getEmail(), u.getPerfil().getPuntaje());
+            }
+
+            System.out.println("\n🔴 EQUIPO B:");
+            for (User u : resultado.getEquipoB()) {
+                System.out.printf("   • %-25s (MMR: %d)%n", u.getEmail(), u.getPerfil().getPuntaje());
+            }
+
+            // Estadísticas
+            int mmrPromedioA = resultado.getEquipoA().stream()
+                    .mapToInt(u -> u.getPerfil().getPuntaje())
+                    .sum() / Math.max(1, resultado.getEquipoA().size());
+            int mmrPromedioB = resultado.getEquipoB().stream()
+                    .mapToInt(u -> u.getPerfil().getPuntaje())
+                    .sum() / Math.max(1, resultado.getEquipoB().size());
+
+            System.out.println("\n📊 Balance de equipos:");
+            System.out.println("   Equipo A - MMR promedio: " + mmrPromedioA);
+            System.out.println("   Equipo B - MMR promedio: " + mmrPromedioB);
+            System.out.println("   Diferencia: " + Math.abs(mmrPromedioA - mmrPromedioB));
+
+            if (resultado.estanCompletos(scrim.getJugadoresPorLado())) {
+                System.out.println("\n✅ ¡Equipos completos y listos para jugar!");
+            } else {
+                System.out.println("\n⚠️  Faltan " +
+                        (scrim.getCantidadTotalJugadores() - resultado.totalJugadores()) +
+                        " jugadores");
+            }
+        }
+
+        System.out.println("\n" + "=".repeat(80) + "\n");
+    }
+
+    private static void demoMatchmakingPorLatencia() {
+        System.out.println("\n" + "=".repeat(80));
+        System.out.println("DEMO: MATCHMAKING POR LATENCIA/PING");
+        System.out.println("=".repeat(80));
+
+        // Crear usuarios de prueba con diferentes regiones
+        List<User> candidatos = crearUsuariosPruebaLatencia();
+
+        // Crear un scrim en una región específica
+        System.out.println("\n📋 Creando scrim:");
+        Scrim scrim = ScrimBuilder.nuevo()
+                .juego(JUEGOS_DISPONIBLES[1])  // Valorant (requiere baja latencia)
+                .formato(5)
+                .region("NA")                   // Servidor en Norte América
+                .fechaHora(LocalDateTime.now().plusHours(2))
+                .build();
+
+        System.out.println("   Juego: " + scrim.getJuego().getNombre());
+        System.out.println("   Formato: " + scrim.getFormato());
+        System.out.println("   Región del servidor: " + scrim.getRegion());
+        System.out.println("   Jugadores necesarios: " + scrim.getCantidadTotalJugadores());
+
+        // Mostrar candidatos con sus latencias
+        System.out.println("\n👥 Candidatos disponibles:");
+        ByLatencyStrategy estrategiaLatencia = new ByLatencyStrategy(100);
+        for (int i = 0; i < candidatos.size(); i++) {
+            User u = candidatos.get(i);
+            int latencia = estrategiaLatencia.obtenerLatencia(u, scrim.getRegion());
+            String indicador = latencia <= 50 ? "🟢" : latencia <= 100 ? "🟡" : "🔴";
+            System.out.printf("   %2d. %-25s | Región: %-3s | Latencia: %3dms %s%n",
+                    i+1, u.getEmail(), u.getRegion(), latencia, indicador);
+        }
+
+        // Crear servicio de matchmaking con estrategia de latencia
+        System.out.println("\n⚙️  Configurando estrategia de matchmaking...");
+        MatchmakingService matchmaking = new MatchmakingService(estrategiaLatencia);
+
+        System.out.println("   Estrategia: ByLatencyStrategy");
+        System.out.println("   Umbral máximo: 100ms");
+        System.out.println("   🟢 Excelente: ≤50ms | 🟡 Bueno: 51-100ms | 🔴 Rechazado: >100ms");
+
+        // Realizar matchmaking
+        System.out.println("\n🔍 Buscando jugadores con buena conexión...");
+        List<User> seleccionados = matchmaking.emparejarJugadores(scrim, candidatos);
+
+        // Mostrar resultados
+        System.out.println("\n✅ Jugadores seleccionados (ordenados por latencia):");
+        if (seleccionados.isEmpty()) {
+            System.out.println("   ❌ No se encontraron jugadores con latencia aceptable");
+        } else {
+            for (int i = 0; i < seleccionados.size(); i++) {
+                User u = seleccionados.get(i);
+                int latencia = estrategiaLatencia.obtenerLatencia(u, scrim.getRegion());
+                double score = matchmaking.evaluarCompatibilidad(u, scrim);
+                String calidad = latencia <= 30 ? "Excelente" : latencia <= 60 ? "Muy buena" : "Buena";
+                System.out.printf("   %2d. %-25s | %3dms | %s | Score: %.1f/100%n",
+                        i+1, u.getEmail(), latencia, calidad, score);
+            }
+
+            // Formar equipos
+            System.out.println("\n👥 Formando equipos...");
+            var resultado = matchmaking.armarEquipos(seleccionados, scrim);
+
+            System.out.println("\n🔵 EQUIPO A:");
+            for (User u : resultado.getEquipoA()) {
+                int latencia = estrategiaLatencia.obtenerLatencia(u, scrim.getRegion());
+                System.out.printf("   • %-25s | %3dms | Región: %s%n",
+                        u.getEmail(), latencia, u.getRegion());
+            }
+
+            System.out.println("\n🔴 EQUIPO B:");
+            for (User u : resultado.getEquipoB()) {
+                int latencia = estrategiaLatencia.obtenerLatencia(u, scrim.getRegion());
+                System.out.printf("   • %-25s | %3dms | Región: %s%n",
+                        u.getEmail(), latencia, u.getRegion());
+            }
+
+            // Estadísticas de latencia
+            if (!resultado.getEquipoA().isEmpty() && !resultado.getEquipoB().isEmpty()) {
+                int latenciaPromedioA = resultado.getEquipoA().stream()
+                        .mapToInt(u -> estrategiaLatencia.obtenerLatencia(u, scrim.getRegion()))
+                        .sum() / resultado.getEquipoA().size();
+                int latenciaPromedioB = resultado.getEquipoB().stream()
+                        .mapToInt(u -> estrategiaLatencia.obtenerLatencia(u, scrim.getRegion()))
+                        .sum() / resultado.getEquipoB().size();
+
+                System.out.println("\n📊 Estadísticas de latencia:");
+                System.out.println("   Equipo A - Latencia promedio: " + latenciaPromedioA + "ms");
+                System.out.println("   Equipo B - Latencia promedio: " + latenciaPromedioB + "ms");
+                System.out.println("   Latencia general: " + ((latenciaPromedioA + latenciaPromedioB) / 2) + "ms");
+            }
+
+            if (resultado.estanCompletos(scrim.getJugadoresPorLado())) {
+                System.out.println("\n✅ ¡Equipos completos con buena conexión!");
+            } else {
+                System.out.println("\n⚠️  Faltan " +
+                        (scrim.getCantidadTotalJugadores() - resultado.totalJugadores()) +
+                        " jugadores");
+            }
+        }
+
+        System.out.println("\n" + "=".repeat(80) + "\n");
+    }
+
+    private static void compararEstrategiasMatchmaking() {
+        System.out.println("\n" + "=".repeat(80));
+        System.out.println("COMPARACIÓN: ESTRATEGIAS MMR vs LATENCIA");
+        System.out.println("=".repeat(80));
+
+        // Crear un conjunto diverso de usuarios
+        List<User> candidatos = crearUsuariosMixtos();
+
+        // Crear scrim
+        System.out.println("\n📋 Scrim de prueba:");
+        Scrim scrim = ScrimBuilder.nuevo()
+                .juego(JUEGOS_DISPONIBLES[0])
+                .formato(5)
+                .region("NA")
+                .rango(1000, 2000)
+                .fechaHora(LocalDateTime.now().plusHours(2))
+                .build();
+
+        System.out.println("   Juego: " + scrim.getJuego().getNombre());
+        System.out.println("   Formato: " + scrim.getFormato());
+        System.out.println("   Región: " + scrim.getRegion());
+        System.out.println("   Rango: " + scrim.getRangoMin() + "-" + scrim.getRangoMax());
+
+        // Mostrar todos los candidatos
+        System.out.println("\n👥 Candidatos (Total: " + candidatos.size() + "):");
+        ByLatencyStrategy tempLatencyStrategy = new ByLatencyStrategy(100);
+        for (int i = 0; i < candidatos.size(); i++) {
+            User u = candidatos.get(i);
+            int latencia = tempLatencyStrategy.obtenerLatencia(u, scrim.getRegion());
+            System.out.printf("   %2d. %-20s | MMR: %4d | Región: %-3s | Ping: %3dms%n",
+                    i+1, u.getEmail(), u.getPerfil().getPuntaje(), u.getRegion(), latencia);
+        }
+
+        System.out.println("\n" + "-".repeat(80));
+
+        // ESTRATEGIA 1: Por MMR
+        System.out.println("\n🎯 ESTRATEGIA 1: MATCHMAKING POR MMR");
+        System.out.println("-".repeat(80));
+
+        MatchmakingService servicioMMR = new MatchmakingService(new ByMMRStrategy(500));
+        List<User> seleccionadosMMR = servicioMMR.emparejarJugadores(scrim, candidatos);
+
+        System.out.println("Seleccionados: " + seleccionadosMMR.size() + " jugadores");
+        System.out.println("\nTop 5 por MMR:");
+        for (int i = 0; i < Math.min(5, seleccionadosMMR.size()); i++) {
+            User u = seleccionadosMMR.get(i);
+            int latencia = tempLatencyStrategy.obtenerLatencia(u, scrim.getRegion());
+            double score = servicioMMR.evaluarCompatibilidad(u, scrim);
+            System.out.printf("   %d. %-20s | MMR: %4d | Ping: %3dms | Score: %.1f%n",
+                    i+1, u.getEmail(), u.getPerfil().getPuntaje(), latencia, score);
+        }
+
+        // ESTRATEGIA 2: Por Latencia
+        System.out.println("\n🌐 ESTRATEGIA 2: MATCHMAKING POR LATENCIA");
+        System.out.println("-".repeat(80));
+
+        MatchmakingService servicioLatencia = new MatchmakingService(new ByLatencyStrategy(100));
+        List<User> seleccionadosLatencia = servicioLatencia.emparejarJugadores(scrim, candidatos);
+
+        System.out.println("Seleccionados: " + seleccionadosLatencia.size() + " jugadores");
+        System.out.println("\nTop 5 por Latencia:");
+        for (int i = 0; i < Math.min(5, seleccionadosLatencia.size()); i++) {
+            User u = seleccionadosLatencia.get(i);
+            int latencia = tempLatencyStrategy.obtenerLatencia(u, scrim.getRegion());
+            double score = servicioLatencia.evaluarCompatibilidad(u, scrim);
+            System.out.printf("   %d. %-20s | MMR: %4d | Ping: %3dms | Score: %.1f%n",
+                    i+1, u.getEmail(), u.getPerfil().getPuntaje(), latencia, score);
+        }
+
+        // Análisis comparativo
+        System.out.println("\n📊 ANÁLISIS COMPARATIVO");
+        System.out.println("=".repeat(80));
+
+        // MMR promedio
+        if (!seleccionadosMMR.isEmpty()) {
+            double mmrPromedioMMR = seleccionadosMMR.stream()
+                    .mapToInt(u -> u.getPerfil().getPuntaje())
+                    .average()
+                    .orElse(0);
+            double latenciaPromedioMMR = seleccionadosMMR.stream()
+                    .mapToInt(u -> tempLatencyStrategy.obtenerLatencia(u, scrim.getRegion()))
+                    .average()
+                    .orElse(0);
+
+            System.out.println("\n🎯 Estrategia MMR:");
+            System.out.printf("   MMR promedio: %.0f%n", mmrPromedioMMR);
+            System.out.printf("   Latencia promedio: %.0fms%n", latenciaPromedioMMR);
+            System.out.println("   ✅ Ventaja: Partidas más balanceadas");
+            System.out.println("   ⚠️  Posible desventaja: Algunos jugadores con alta latencia");
+        }
+
+        if (!seleccionadosLatencia.isEmpty()) {
+            double mmrPromedioLatencia = seleccionadosLatencia.stream()
+                    .mapToInt(u -> u.getPerfil().getPuntaje())
+                    .average()
+                    .orElse(0);
+            double latenciaPromedioLatencia = seleccionadosLatencia.stream()
+                    .mapToInt(u -> tempLatencyStrategy.obtenerLatencia(u, scrim.getRegion()))
+                    .average()
+                    .orElse(0);
+
+            System.out.println("\n🌐 Estrategia Latencia:");
+            System.out.printf("   MMR promedio: %.0f%n", mmrPromedioLatencia);
+            System.out.printf("   Latencia promedio: %.0fms%n", latenciaPromedioLatencia);
+            System.out.println("   ✅ Ventaja: Mejor experiencia de juego (sin lag)");
+            System.out.println("   ⚠️  Posible desventaja: Partidas desbalanceadas en habilidad");
+        }
+
+        System.out.println("\n💡 RECOMENDACIONES:");
+        System.out.println("   • Juegos competitivos (LoL, Dota) → Priorizar MMR");
+        System.out.println("   • Juegos de reacción (FPS, Fighting) → Priorizar Latencia");
+        System.out.println("   • Balance ideal → Combinar ambas estrategias (HybridStrategy)");
+
+        System.out.println("\n" + "=".repeat(80) + "\n");
+    }
+
+    private static void buscarJugadoresParaScrim(Scanner sc, User currentUser) {
+        if (scrims.isEmpty()) {
+            System.out.println("\n❌ No hay scrims disponibles.");
+            System.out.println("Crea un scrim primero (opción 14).\n");
+            return;
+        }
+
+        System.out.println("\n" + "=".repeat(80));
+        System.out.println("BUSCAR JUGADORES PARA SCRIM (MATCHMAKING)");
+        System.out.println("=".repeat(80));
+
+        // Seleccionar scrim
+        verScrimsDisponibles();
+        System.out.print("\nSelecciona el número del scrim: ");
+        int idx = Integer.parseInt(sc.nextLine().trim()) - 1;
+
+        if (idx < 0 || idx >= scrims.size()) {
+            System.out.println("❌ Scrim inválido.");
+            return;
+        }
+
+        Scrim scrim = scrims.get(idx);
+
+        // Crear candidatos de prueba
+        System.out.println("\n🔄 Generando candidatos de prueba...");
+        List<User> candidatos = crearUsuariosMixtos();
+        System.out.println("✅ " + candidatos.size() + " candidatos generados");
+
+        // Seleccionar estrategia
+        System.out.println("\n⚙️  Selecciona estrategia de matchmaking:");
+        System.out.println("1. Por MMR/Rango (prioriza habilidad)");
+        System.out.println("2. Por Latencia/Ping (prioriza conexión)");
+        System.out.print("\nOpción (1-2): ");
+        String opcion = sc.nextLine().trim();
+
+        MatchmakingService matchmaking;
+        String nombreEstrategia;
+
+        if ("1".equals(opcion)) {
+            System.out.print("Diferencia máxima de MMR permitida (100-1000, recomendado 500): ");
+            int diferenciaMMR = Integer.parseInt(sc.nextLine().trim());
+            matchmaking = new MatchmakingService(new ByMMRStrategy(diferenciaMMR));
+            nombreEstrategia = "MMR (diferencia máx: " + diferenciaMMR + ")";
+        } else {
+            System.out.print("Umbral máximo de latencia en ms (50-200, recomendado 100): ");
+            int umbralLatencia = Integer.parseInt(sc.nextLine().trim());
+            matchmaking = new MatchmakingService(new ByLatencyStrategy(umbralLatencia));
+            nombreEstrategia = "Latencia (máx: " + umbralLatencia + "ms)";
+        }
+
+        // Realizar matchmaking
+        System.out.println("\n🔍 Buscando jugadores con estrategia: " + nombreEstrategia);
+        List<User> seleccionados = matchmaking.emparejarJugadores(scrim, candidatos);
+
+        if (seleccionados.isEmpty()) {
+            System.out.println("\n❌ No se encontraron jugadores compatibles.");
+            System.out.println("Intenta con criterios menos restrictivos.");
+            return;
+        }
+
+        // Mostrar resultados
+        System.out.println("\n✅ Se encontraron " + seleccionados.size() + " jugadores compatibles:");
+        for (int i = 0; i < Math.min(10, seleccionados.size()); i++) {
+            User u = seleccionados.get(i);
+            double score = matchmaking.evaluarCompatibilidad(u, scrim);
+            System.out.printf("   %2d. %-25s | Score: %.1f/100%n",
+                    i+1, u.getEmail(), score);
+        }
+
+        // Agregar jugadores al scrim
+        System.out.print("\n¿Deseas agregar los mejores jugadores al scrim? (s/n): ");
+        String agregar = sc.nextLine().trim().toLowerCase();
+
+        if ("s".equals(agregar)) {
+            int agregados = 0;
+            int faltantes = scrim.getJugadoresFaltantes();
+
+            for (int i = 0; i < Math.min(faltantes, seleccionados.size()); i++) {
+                try {
+                    scrim.agregarJugador(seleccionados.get(i));
+                    agregados++;
+                } catch (Exception e) {
+                    System.out.println("⚠️  No se pudo agregar jugador: " + e.getMessage());
+                }
+            }
+
+            System.out.println("\n✅ Se agregaron " + agregados + " jugadores al scrim");
+            System.out.println("Jugadores actuales: " + scrim.getJugadoresActuales() +
+                    "/" + scrim.getCantidadTotalJugadores());
+
+            if (scrim.estaCompleto()) {
+                System.out.println("\n🎉 ¡El scrim está completo y listo para comenzar!");
+            }
+        }
+
+        System.out.println("\n" + "=".repeat(80) + "\n");
+    }
+    // ============================================================================
+// MÉTODOS AUXILIARES PARA CREAR USUARIOS DE PRUEBA
+// ============================================================================
+
+    private static List<User> crearUsuariosPruebaMMR() {
+        List<User> usuarios = new ArrayList<>();
+
+        // Crear usuarios con diferentes niveles de MMR
+        int[] mmrValues = {800, 950, 1150, 1300, 1450, 1500, 1550, 1700, 1850, 2100, 2300};
+
+        for (int i = 0; i < mmrValues.length; i++) {
+            RegularUser user = new RegularUser();
+            user.setId("test-mmr-" + i);
+            user.setEmail(String.format("jugador%d@test.com", i + 1));
+            user.setRegion("LAN");
+
+            Perfil perfil = new Perfil(i, JUEGOS_DISPONIBLES[0], "Disponible siempre");
+            perfil.setPuntaje(mmrValues[i]);
+            user.setPerfil(perfil);
+
+            usuarios.add(user);
+        }
+
+        return usuarios;
+    }
+
+    private static List<User> crearUsuariosPruebaLatencia() {
+        List<User> usuarios = new ArrayList<>();
+
+        // Crear usuarios de diferentes regiones
+        String[] regiones = {"NA", "NA", "NA", "SA", "SA", "EU", "EU", "AS", "OCE", "OCE"};
+
+        for (int i = 0; i < regiones.length; i++) {
+            RegularUser user = new RegularUser();
+            user.setId("test-lat-" + i);
+            user.setEmail(String.format("player%d@region.com", i + 1));
+            user.setRegion(regiones[i]);
+
+            Perfil perfil = new Perfil(i, JUEGOS_DISPONIBLES[1], "Tardes y noches");
+            perfil.setPuntaje(1500);  // Mismo MMR para todos
+            user.setPerfil(perfil);
+
+            usuarios.add(user);
+        }
+
+        return usuarios;
+    }
+
+    private static List<User> crearUsuariosMixtos() {
+        List<User> usuarios = new ArrayList<>();
+
+        // Datos variados: [email, mmr, región]
+        Object[][] datos = {
+                {"proNA1@game.com", 1800, "NA"},
+                {"proNA2@game.com", 1750, "NA"},
+                {"casualNA@game.com", 1200, "NA"},
+                {"proEU@game.com", 1900, "EU"},
+                {"mediumEU@game.com", 1500, "EU"},
+                {"latinoPro@game.com", 1850, "SA"},
+                {"latinoMid@game.com", 1400, "SA"},
+                {"asianPro@game.com", 2000, "AS"},
+                {"oceanic@game.com", 1600, "OCE"},
+                {"rookieNA@game.com", 900, "NA"},
+                {"veteranEU@game.com", 1950, "EU"},
+                {"risingStarSA@game.com", 1650, "SA"}
+        };
+
+        for (int i = 0; i < datos.length; i++) {
+            Object[] dato = datos[i];
+            RegularUser user = new RegularUser();
+            user.setId("test-mix-" + i);
+            user.setEmail((String) dato[0]);
+            user.setRegion((String) dato[2]);
+
+            Perfil perfil = new Perfil(i, JUEGOS_DISPONIBLES[0], "Variable");
+            perfil.setPuntaje((Integer) dato[1]);
+            user.setPerfil(perfil);
+
+            usuarios.add(user);
+        }
+
+        return usuarios;
+    }
+
 }
