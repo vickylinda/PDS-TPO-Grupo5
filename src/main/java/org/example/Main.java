@@ -349,9 +349,9 @@ public class Main {
                 .fechaHora(fechaHora);
 
         if (establecerRango.equals("s")) {
-            System.out.print("Rango mínimo (1-10): ");
+            System.out.print("Puntaje de Rango mínimo (1-8000): ");
             int rangoMin = Integer.parseInt(sc.nextLine().trim());
-            System.out.print("Rango máximo (1-10): ");
+            System.out.print("Puntaje de Rango máximo (1-8000): ");
             int rangoMax = Integer.parseInt(sc.nextLine().trim());
             builder.rango(rangoMin, rangoMax);
         }
@@ -816,7 +816,7 @@ public class Main {
 
         System.out.println("   Juego: " + scrim.getJuego().getNombre());
         System.out.println("   Formato: " + scrim.getFormato());
-        System.out.println("   Rango requerido: " + scrim.getRangoMin() + " - " + scrim.getRangoMax());
+        System.out.println("   Puntaaje de Rango requerido: " + scrim.getRangoMin() + " - " + scrim.getRangoMax());
         System.out.println("   Jugadores necesarios: " + scrim.getCantidadTotalJugadores());
 
         // Mostrar candidatos
@@ -1185,12 +1185,12 @@ public class Main {
 
         if ("s".equals(agregar)) {
             int agregados = 0;
-            int faltantes = scrim.getJugadoresFaltantes();
 
-            for (int i = 0; i < Math.min(faltantes, seleccionados.size()); i++) {
+            for (int i = 0; i <= seleccionados.size() && scrim.getJugadoresFaltantes() > 0; i++) {
                 try {
                     scrim.agregarJugador(seleccionados.get(i));
                     agregados++;
+
                 } catch (Exception e) {
                     System.out.println("⚠️  No se pudo agregar jugador: " + e.getMessage());
                 }

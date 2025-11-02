@@ -43,7 +43,6 @@ public class Scrim {
     private String creadorId;
     private List<User> equipoA;
     private List<User> equipoB;
-    private List<String> jugadoresInscritos;
     private int jugadoresActuales;
 
     // ===== RESULTADOS Y METADATA =====
@@ -56,7 +55,6 @@ public class Scrim {
     // ===== CONSTRUCTOR =====
     public Scrim() {
         this.id = UUID.randomUUID().toString();
-        this.jugadoresInscritos = new ArrayList<>();
         //this.resultados = new HashMap<>();
         this.jugadoresActuales = 0;
         this.esPrivado = false;
@@ -199,7 +197,7 @@ public class Scrim {
     }
 
     public Integer getCantidadTotalJugadores() {
-        return cantidadTotalJugadores;
+        return jugadoresPorLado*2;
     }
 
     public void setCantidadTotalJugadores(Integer cantidadTotalJugadores) {
@@ -298,9 +296,6 @@ public class Scrim {
     }
 
 
-    public List<String> getJugadoresInscritos() {
-        return Collections.unmodifiableList(jugadoresInscritos);
-    }
 
     public int getJugadoresActuales() {
         return jugadoresActuales;
