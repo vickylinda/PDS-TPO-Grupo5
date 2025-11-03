@@ -82,8 +82,7 @@ public class Main {
                     === MATCHMAKING ===
                     23) Demo Matchmaking por MMR
                     24) Demo Matchmaking por Latencia
-                    25) Comparar Estrategias de Matchmaking
-                    26) Buscar Jugadores para Scrim (interactivo)
+                    25) Buscar Jugadores para Scrim (interactivo)
                    
                     0) Salir
                     """);
@@ -285,8 +284,7 @@ public class Main {
 
                     case "23" -> demoMatchmakingPorMMR();
                     case "24" -> demoMatchmakingPorLatencia();
-                    case "25" -> compararEstrategiasMatchmaking();
-                    case "26" -> {
+                    case "25" -> {
                         ensureLoggedIn(currentUser);
                         buscarJugadoresParaScrim(sc, currentUser);
                     }
@@ -994,121 +992,6 @@ public class Main {
         System.out.println("\n" + "=".repeat(80) + "\n");
     }
 
-    private static void compararEstrategiasMatchmaking() {
-        System.out.println("\n" + "=".repeat(80));
-        System.out.println("COMPARACIÓN: ESTRATEGIAS MMR vs LATENCIA");
-        System.out.println("=".repeat(80));
-
-        // Crear un conjunto diverso de usuarios
-        List<User> candidatos = crearUsuariosMixtos();
-
-        // Crear scrim
-        System.out.println("\n📋 Scrim de prueba:");
-        Scrim scrim = ScrimBuilder.nuevo()
-                .juego(JUEGOS_DISPONIBLES[0])
-                .formato(5)
-                .region("NA")
-                .rango(1000, 2000)
-                .fechaHora(LocalDateTime.now().plusHours(2))
-                .build();
-
-        System.out.println("   Juego: " + scrim.getJuego().getNombre());
-        System.out.println("   Formato: " + scrim.getFormato());
-        System.out.println("   Región: " + scrim.getRegion());
-        System.out.println("   Rango: " + scrim.getRangoMin() + "-" + scrim.getRangoMax());
-
-        // Mostrar todos los candidatos
-        System.out.println("\n👥 Candidatos (Total: " + candidatos.size() + "):");
-        ByLatencyStrategy tempLatencyStrategy = new ByLatencyStrategy(100);
-        for (int i = 0; i < candidatos.size(); i++) {
-            User u = candidatos.get(i);
-            int latencia = tempLatencyStrategy.obtenerLatencia(u, scrim.getRegion());
-            System.out.printf("   %2d. %-20s | MMR: %4d | Región: %-3s | Ping: %3dms%n",
-                    i+1, u.getEmail(), u.getPerfil().getPuntaje(), u.getRegion(), latencia);
-        }
-
-        System.out.println("\n" + "-".repeat(80));
-
-        // ESTRATEGIA 1: Por MMR
-        System.out.println("\n🎯 ESTRATEGIA 1: MATCHMAKING POR MMR");
-        System.out.println("-".repeat(80));
-
-        MatchmakingService servicioMMR = new MatchmakingService(new ByMMRStrategy(500));
-        List<User> seleccionadosMMR = servicioMMR.emparejarJugadores(scrim, candidatos);
-
-        System.out.println("Seleccionados: " + seleccionadosMMR.size() + " jugadores");
-        System.out.println("\nTop 5 por MMR:");
-        for (int i = 0; i < Math.min(5, seleccionadosMMR.size()); i++) {
-            User u = seleccionadosMMR.get(i);
-            int latencia = tempLatencyStrategy.obtenerLatencia(u, scrim.getRegion());
-            double score = servicioMMR.evaluarCompatibilidad(u, scrim);
-            System.out.printf("   %d. %-20s | MMR: %4d | Ping: %3dms | Score: %.1f%n",
-                    i+1, u.getEmail(), u.getPerfil().getPuntaje(), latencia, score);
-        }
-
-        // ESTRATEGIA 2: Por Latencia
-        System.out.println("\n🌐 ESTRATEGIA 2: MATCHMAKING POR LATENCIA");
-        System.out.println("-".repeat(80));
-
-        MatchmakingService servicioLatencia = new MatchmakingService(new ByLatencyStrategy(100));
-        List<User> seleccionadosLatencia = servicioLatencia.emparejarJugadores(scrim, candidatos);
-
-        System.out.println("Seleccionados: " + seleccionadosLatencia.size() + " jugadores");
-        System.out.println("\nTop 5 por Latencia:");
-        for (int i = 0; i < Math.min(5, seleccionadosLatencia.size()); i++) {
-            User u = seleccionadosLatencia.get(i);
-            int latencia = tempLatencyStrategy.obtenerLatencia(u, scrim.getRegion());
-            double score = servicioLatencia.evaluarCompatibilidad(u, scrim);
-            System.out.printf("   %d. %-20s | MMR: %4d | Ping: %3dms | Score: %.1f%n",
-                    i+1, u.getEmail(), u.getPerfil().getPuntaje(), latencia, score);
-        }
-
-        // Análisis comparativo
-        System.out.println("\n📊 ANÁLISIS COMPARATIVO");
-        System.out.println("=".repeat(80));
-
-        // MMR promedio
-        if (!seleccionadosMMR.isEmpty()) {
-            double mmrPromedioMMR = seleccionadosMMR.stream()
-                    .mapToInt(u -> u.getPerfil().getPuntaje())
-                    .average()
-                    .orElse(0);
-            double latenciaPromedioMMR = seleccionadosMMR.stream()
-                    .mapToInt(u -> tempLatencyStrategy.obtenerLatencia(u, scrim.getRegion()))
-                    .average()
-                    .orElse(0);
-
-            System.out.println("\n🎯 Estrategia MMR:");
-            System.out.printf("   MMR promedio: %.0f%n", mmrPromedioMMR);
-            System.out.printf("   Latencia promedio: %.0fms%n", latenciaPromedioMMR);
-            System.out.println("   ✅ Ventaja: Partidas más balanceadas");
-            System.out.println("   ⚠️  Posible desventaja: Algunos jugadores con alta latencia");
-        }
-
-        if (!seleccionadosLatencia.isEmpty()) {
-            double mmrPromedioLatencia = seleccionadosLatencia.stream()
-                    .mapToInt(u -> u.getPerfil().getPuntaje())
-                    .average()
-                    .orElse(0);
-            double latenciaPromedioLatencia = seleccionadosLatencia.stream()
-                    .mapToInt(u -> tempLatencyStrategy.obtenerLatencia(u, scrim.getRegion()))
-                    .average()
-                    .orElse(0);
-
-            System.out.println("\n🌐 Estrategia Latencia:");
-            System.out.printf("   MMR promedio: %.0f%n", mmrPromedioLatencia);
-            System.out.printf("   Latencia promedio: %.0fms%n", latenciaPromedioLatencia);
-            System.out.println("   ✅ Ventaja: Mejor experiencia de juego (sin lag)");
-            System.out.println("   ⚠️  Posible desventaja: Partidas desbalanceadas en habilidad");
-        }
-
-        System.out.println("\n💡 RECOMENDACIONES:");
-        System.out.println("   • Juegos competitivos (LoL, Dota) → Priorizar MMR");
-        System.out.println("   • Juegos de reacción (FPS, Fighting) → Priorizar Latencia");
-        System.out.println("   • Balance ideal → Combinar ambas estrategias (HybridStrategy)");
-
-        System.out.println("\n" + "=".repeat(80) + "\n");
-    }
 
     private static void buscarJugadoresParaScrim(Scanner sc, User currentUser) {
         if (scrims.isEmpty()) {

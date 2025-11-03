@@ -14,6 +14,8 @@ public class Perfil {
     private int id;
     private Juego juegoPrincipal;
     private List<Rol> rolesPreferidos;
+    private List<String> regionesPreferidas;
+    private List<Juego> juegosInteresados;
     private String disponibilidadHoraria;
 
     @JsonIgnore
@@ -23,6 +25,8 @@ public class Perfil {
 
     public Perfil() {
         this.rolesPreferidos = new ArrayList<>();
+        this.regionesPreferidas = new ArrayList<>();
+        this.juegosInteresados = new ArrayList<>();
         this.puntaje = 0;
         this.rango = RangoFactory.fromPuntaje(this); // valor inicial coherente
     }
@@ -57,6 +61,22 @@ public class Perfil {
     public List<Rol> getRolesPreferidos() { return rolesPreferidos; }
     public void setRolesPreferidos(List<Rol> rolesPreferidos) { this.rolesPreferidos = rolesPreferidos; }
 
+    public List<String> getRegionesPreferidas() {
+        return regionesPreferidas;
+    }
+
+    public void setRegionesPreferidas(List<String> regionesPreferidas) {
+        this.regionesPreferidas = regionesPreferidas;
+    }
+
+    public List<Juego> getJuegosInteresados() {
+        return juegosInteresados;
+    }
+
+    public void setJuegosInteresados(List<Juego> juegosInteresados) {
+        this.juegosInteresados = juegosInteresados;
+    }
+
     public String getDisponibilidadHoraria() { return disponibilidadHoraria; }
     public void setDisponibilidadHoraria(String disponibilidadHoraria) { this.disponibilidadHoraria = disponibilidadHoraria; }
 
@@ -83,6 +103,16 @@ public class Perfil {
         if (!rolesPreferidos.contains(rol)) rolesPreferidos.add(rol);
     }
     public void eliminarRolPreferido(Rol rol) { rolesPreferidos.remove(rol); }
+
+    public void agregarRegionPreferido(String region) {
+        if (!regionesPreferidas.contains(region)) regionesPreferidas.add(region);
+    }
+    public void eliminarRegionPreferido(String region) { regionesPreferidas.remove(region); }
+
+    public void agregarJuegoPreferido(Juego juego) {
+        if (!juegosInteresados.contains(juego)) juegosInteresados.add(juego);
+    }
+    public void eliminarJuegoPreferido(Juego juego) { juegosInteresados.remove(juego); }
 
     @Override public String toString() {
         return "Perfil{" +
