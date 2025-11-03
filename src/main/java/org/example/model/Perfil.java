@@ -12,6 +12,8 @@ public class Perfil {
     private Juego juegoPrincipal;
     private List<Rol> rolesPreferidos;
     private String disponibilidadHoraria;
+    private List<Juego> juegosInteresados;
+    private List<String> regionesPreferidas;
 
     @JsonIgnore
     private IRangoState rango;
@@ -22,6 +24,8 @@ public class Perfil {
         this.rolesPreferidos = new ArrayList<>();
         this.puntaje = 0;
         this.rango = RangoFactory.fromPuntaje(this); // valor inicial coherente
+        this.juegosInteresados = new ArrayList<>();
+        this.regionesPreferidas = new ArrayList<>();
     }
 
     public Perfil(int id, Juego juegoPrincipal, String disponibilidadHoraria) {
@@ -45,6 +49,19 @@ public class Perfil {
 
     // --- getters/setters básicos ---
 
+    public List<Juego> getJuegosInteresados() {
+        return juegosInteresados;
+    }
+    public void setJuegosInteresados(List<Juego> juegosInteresados) {
+        this.juegosInteresados = juegosInteresados;
+    }
+
+    public List<String> getRegionesPreferidas() {
+        return regionesPreferidas;
+    }
+    public void setRegionesPreferidas(List<String> regionesPreferidas) {
+        this.regionesPreferidas = regionesPreferidas;
+    }
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
