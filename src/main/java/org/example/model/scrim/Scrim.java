@@ -46,7 +46,6 @@ public class Scrim {
     private int jugadoresActuales;
 
     // ===== RESULTADOS Y METADATA =====
-    private String ganadorId;
     private Resultados resultados;
     private String observaciones;
     private boolean esPrivado;
@@ -305,13 +304,6 @@ public class Scrim {
         this.jugadoresActuales = jugadoresActuales;
     }
 
-    public String getGanadorId() {
-        return ganadorId;
-    }
-
-    public void setGanadorId(String ganadorId) {
-        this.ganadorId = ganadorId;
-    }
 
     public String getNombreEstadoActual() {
         return estado.getNombreEstado();
