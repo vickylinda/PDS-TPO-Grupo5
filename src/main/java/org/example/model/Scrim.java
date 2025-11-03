@@ -1,52 +1,47 @@
 package org.example.model;
-
+import org.example.notifications.TipoEvento;
+import org.example.notifications.bus.DomainEventBus;
+import org.example.notifications.events.LobbyCompleto;
+import org.example.notifications.events.*;
+import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import java.util.*;
 
 public class Scrim {
-
     // ===== IDENTIFICACIÓN =====
     private String id;
     private Juego juego;
-
     // ===== FORMATO Y CONFIGURACIÓN =====
     private int jugadoresPorLado;
     private String formato; // Ej: "5v5", "3v3"
     private Integer cantidadTotalJugadores;
-
-
     // ===== REGIÓN Y REQUISITOS =====
     private String region;
-
     private Integer rangoMin;
     private Integer rangoMax;
     private Integer latenciaMaxima;
-
     // ===== TEMPORALIDAD =====
     private LocalDateTime fechaHora;
     private Integer duracionEstimada; // minutos
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaInicio;
     private LocalDateTime fechaFinalizacion;
-
     // ===== MODALIDAD Y ESTADO =====
-
     private IScrimState estado;
-
     // ===== PARTICIPANTES =====
     private String creadorId;
     private List<User> equipoA;
     private List<User> equipoB;
     private List<String> jugadoresInscritos;
     private int jugadoresActuales;
-
     // ===== RESULTADOS Y METADATA =====
     private String ganadorId;
     private Resultados resultados;
     private String observaciones;
     private boolean esPrivado;
     private String codigoAcceso;
-
+    //==
+    private boolean lobbyNotificado = false;
     // ===== CONSTRUCTOR =====
     public Scrim() {
         this.id = UUID.randomUUID().toString();
@@ -60,26 +55,95 @@ public class Scrim {
         this.estado = new BuscandoJugadoresState(this);
     }
 
+    // Eventos ya notificados (por scrim) para evitar duplicados
+    private final EnumSet<TipoEvento> eventosNotificados = EnumSet.noneOf(TipoEvento.class);
+
     // ===== MÉTODOS DE NEGOCIO =====
+    public void notificarScrimCreado(String emailCreador) {
+        Map<String,String> payload = basePayload();
+        payload.put("toCsv", emailCreador); // 🔥 garantiza al menos un destinatario
+        publishOnce(TipoEvento.SCRIM_CREADO, payload);
+        System.out.println("📩 Evento SCRIM_CREADO publicado (notificación de creación).");
+    }
+
+
+    // Destinatarios (A+B) sin duplicados
+    private String recipientsCsv() {
+        return java.util.stream.Stream.concat(
+                        getEquipoA().stream().map(User::getEmail),
+                        getEquipoB().stream().map(User::getEmail)
+                )
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .distinct()
+                .collect(Collectors.joining(","));
+    }
+    private Map<String,String> basePayload() {
+        Map<String,String> p = new HashMap<>();
+        p.put("scrimId", getId());
+        p.put("juego", getJuego() != null ? getJuego().getNombre() : "Juego");
+        p.put("region", getRegion());
+        p.put("fechaHora", String.valueOf(getFechaHora()));
+        p.put("toCsv", recipientsCsv());
+        return p;
+    }
+    // Publica UNA vez por (scrim, tipo). Si ya se publicó, no hace nada.
+    private void publishOnce(TipoEvento tipo, Map<String,String> extra) {
+        if (eventosNotificados.contains(tipo)) {
+            System.out.printf("[Scrim %s] SKIP %s (ya publicado)%n", getId(), tipo);
+            return;
+        }
+
+        Map<String,String> payload = basePayload();
+        if (extra != null) payload.putAll(extra);
+
+        switch (tipo) {
+            case SCRIM_CREADO    -> DomainEventBus.getInstance().publish(new ScrimCreado(getId(), payload));
+            case LOBBY_ARMADO    -> DomainEventBus.getInstance().publish(new LobbyCompleto(getId(), payload));
+            case CONFIRMADO      -> DomainEventBus.getInstance().publish(new ScrimConfirmado(getId(), payload));
+            case EN_JUEGO        -> DomainEventBus.getInstance().publish(new ScrimEnJuego(getId(), payload));
+            case FINALIZADO      -> DomainEventBus.getInstance().publish(new ScrimFinalizado(getId(), payload));
+            case CANCELADO       -> DomainEventBus.getInstance().publish(new ScrimCancelado(getId(), payload));
+        }
+
+        eventosNotificados.add(tipo);
+    }
 
     public void agregarJugador(User usuario) {
         estado.agregarJugador(usuario);
+        if (estaCompleto()) {
+            publishOnce(TipoEvento.LOBBY_ARMADO, null);
+        }
     }
 
     public void confirmarJugador(User usuario) {
         estado.confirmar(usuario);
+        Map<String, String> payload = basePayload();
+        payload.put("toCsv", usuario.getEmail()); // 🔥 solo al jugador que confirmó
+        payload.put("jugador", usuario.getEmail());
+
+        publishOnce(TipoEvento.CONFIRMADO, payload);
     }
 
     public void iniciarPartida() {
+        if (fechaHora != null && fechaHora.isAfter(LocalDateTime.now())) {
+            System.out.println("⚠ No se puede iniciar la partida antes de la hora programada (" + fechaHora + ")");
+            return;
+        }
+
         estado.iniciar();
+        publishOnce(TipoEvento.EN_JUEGO, null);
     }
 
     public void finalizarPartida() {
         estado.finalizar();
+        publishOnce(TipoEvento.FINALIZADO, null);
     }
 
     public void cancelar() {
         estado.cancelar();
+        publishOnce(TipoEvento.CANCELADO, null);
     }
 
     public void cargarResultados(Resultados resultados) {
@@ -156,6 +220,26 @@ public class Scrim {
         }
         return this.codigoAcceso != null && this.codigoAcceso.equals(codigo);
     }
+    public void mostrarInfo() {
+        System.out.println("\n=== INFORMACIÓN DEL SCRIM ===");
+        System.out.println("ID: " + id);
+        System.out.println("Estado: " + estado.getNombreEstado());
+        System.out.println("Juego: " + juego.getNombre());
+        System.out.println("Modalidad: " + jugadoresPorLado + " vs " + jugadoresPorLado);
+        System.out.println("Región: " + region);
+        // la fecha programada
+        System.out.println("Fecha programada: " + (fechaHora != null ? fechaHora : "-"));
+        //  tendrán valor luego de iniciar/finalizar
+        System.out.println("Fecha/Hora inicio: " + (fechaInicio != null ? fechaInicio : "-"));
+        System.out.println("Fecha/Hora fin: " + (fechaFinalizacion != null ? fechaFinalizacion : "-"));
+        System.out.println("\nEquipo A (" + equipoA.size() + "/" + jugadoresPorLado + "):");
+        equipoA.forEach(u -> System.out.println("  - " + u.getEmail()));
+        System.out.println("\nEquipo B (" + equipoB.size() + "/" + jugadoresPorLado + "):");
+        equipoB.forEach(u -> System.out.println("  - " + u.getEmail()));
+        System.out.println("============================\n");
+    }
+
+
 
     // ===== GETTERS Y SETTERS =====
 
@@ -324,24 +408,7 @@ public class Scrim {
         this.resultados = resultados;
     }
 
-    public void mostrarInfo() {
-        System.out.println("\n=== INFORMACIÓN DEL SCRIM ===");
-        System.out.println("ID: " + id);
-        System.out.println("Estado: " + estado.getNombreEstado());
-        System.out.println("Juego: " + juego.getNombre());
-        System.out.println("Modalidad: " + jugadoresPorLado + " vs " + jugadoresPorLado);
-        System.out.println("Región: " + region);
-        // la fecha programada
-        System.out.println("Fecha programada: " + (fechaHora != null ? fechaHora : "-"));
-        //  tendrán valor luego de iniciar/finalizar
-        System.out.println("Fecha/Hora inicio: " + (fechaInicio != null ? fechaInicio : "-"));
-        System.out.println("Fecha/Hora fin: " + (fechaFinalizacion != null ? fechaFinalizacion : "-"));
-        System.out.println("\nEquipo A (" + equipoA.size() + "/" + jugadoresPorLado + "):");
-        equipoA.forEach(u -> System.out.println("  - " + u.getEmail()));
-        System.out.println("\nEquipo B (" + equipoB.size() + "/" + jugadoresPorLado + "):");
-        equipoB.forEach(u -> System.out.println("  - " + u.getEmail()));
-        System.out.println("============================\n");
-    }
+
 
     public String getObservaciones() {
         return observaciones;
@@ -403,4 +470,9 @@ public class Scrim {
                 ", fechaHora=" + fechaHora +
                 '}';
     }
+
+
+
+
+
 }

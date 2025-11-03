@@ -1,8 +1,17 @@
 package org.example;
 
 import org.example.model.*;
+import org.example.notifications.bus.DomainEventBus;
+import org.example.notifications.events.ScrimCancelado;
+import org.example.notifications.events.ScrimCreado;
+import org.example.notifications.events.ScrimEnJuego;
+import org.example.notifications.events.ScrimFinalizado;
+import org.example.notifications.repo.InMemoryNotificationRepository;
+import org.example.notifications.repo.NotificationRepository;
+import org.example.notifications.subscribers.NotificationSubscriber;
 import org.example.service.AuthService;
 import org.example.store.JsonStore;
+import org.example.notifications.*;
 
 import java.io.Console;
 import java.time.LocalDateTime;
@@ -29,6 +38,21 @@ public class Main {
     public static void main(String[] args) throws Exception {
         JsonStore store = new JsonStore();
         AuthService auth = new AuthService(store);
+
+        // === Notificaciones ===
+        String sgKey = System.getenv("SENDGRID_API_KEY");
+        if (sgKey == null || sgKey.isBlank()) {
+            throw new IllegalStateException("Configura SENDGRID_API_KEY en variables de entorno.");
+        }
+        String fromEmail = System.getenv().getOrDefault("NOTIF_FROM_EMAIL", "vicky9abril@gmail.com");
+        String fromName  = System.getenv().getOrDefault("NOTIF_FROM_NAME",  "eScrims Platform");
+
+        NotificationRepository notifRepo = new InMemoryNotificationRepository();
+        NotificationService notifService = new NotificationService(notifRepo, sgKey, fromEmail, fromName);
+
+
+// Registrás el subscriber una sola vez
+        DomainEventBus.getInstance().subscribe(new NotificationSubscriber(notifService));
 
         Scanner sc = new Scanner(System.in);
         Console console = System.console();
@@ -67,6 +91,8 @@ public class Main {
                     20) Cancelar Scrim
                     21) Cargar Resultados
                     22) Demo Completo de Scrim
+                    
+                    23) Enviar email de prueba
                    
                     0) Salir
                     """);
@@ -158,25 +184,47 @@ public class Main {
                             throw new IllegalArgumentException("Opción de juego inválida.");
                         Juego juegoSeleccionado = JUEGOS_DISPONIBLES[juegoIdx];
 
-                        System.out.print("Región (ej: LAN, NA, EUW): ");
-                        String regionElegida = sc.nextLine().trim().toUpperCase();
 
                         System.out.print("Disponibilidad horaria (ej: Noches 8pm-12am): ");
                         String disponibilidad = sc.nextLine().trim();
 
+                        Perfil perfil;
                         if (currentUser.getPerfil() == null) {
-                            Perfil perfil = new Perfil(
-                                    Integer.parseInt(currentUser.getId().substring(0, 8), 16),
+                            perfil = new Perfil(
+                                    Math.abs(currentUser.getId().hashCode()),
                                     juegoSeleccionado,
                                     disponibilidad
                             );
                             currentUser.setPerfil(perfil);
                             System.out.println("✅ Perfil creado exitosamente.");
                         } else {
+                            perfil = currentUser.getPerfil();
                             currentUser.getPerfil().setJuegoPrincipal(juegoSeleccionado);
                             currentUser.getPerfil().setDisponibilidadHoraria(disponibilidad);
                             System.out.println("✅ Perfil actualizado.");
                         }
+
+                        // --- Preferencias adicionales ---
+                        System.out.println("¿Agregar un juego de interés? (s/n): ");
+                        if (sc.nextLine().trim().equalsIgnoreCase("s")) {
+                            for (int i = 0; i < JUEGOS_DISPONIBLES.length; i++) {
+                                System.out.println((i + 1) + ". " + JUEGOS_DISPONIBLES[i].getNombre());
+                            }
+                            System.out.print("Selecciona uno: ");
+                            int idx = Integer.parseInt(sc.nextLine()) - 1;
+                            perfil.getJuegosInteresados().add(JUEGOS_DISPONIBLES[idx]);
+                        }
+
+                        System.out.print("Región (ej: LAN, NA, EUW): ");
+                        String regionElegida = sc.nextLine().trim().toUpperCase();
+                        currentUser.setRegion(regionElegida);
+
+                        System.out.println("¿Agregar una región preferida? (s/n): ");
+                        if (sc.nextLine().trim().equalsIgnoreCase("s")) {
+                            System.out.print("Región: ");
+                            perfil.getRegionesPreferidas().add(sc.nextLine().trim().toUpperCase());
+                        }
+
                         currentUser.setRegion(regionElegida);
                         store.updateUser(currentUser);
                         mostrarPerfil(currentUser);
@@ -265,6 +313,30 @@ public class Main {
                     case "20" -> cancelarScrim(sc);
                     case "21" -> cargarResultados(sc);
                     case "22" -> demoCompletoScrim();
+                    case "23" -> {
+                        if (currentUser == null) {
+                            System.out.println("Primero hacé login para usar esta opción.");
+                            break;
+                        }
+                        try {
+                            var mailer = new org.example.service.SendGridEmailSender();
+                            String destino = currentUser.getEmail(); // te lo mandás a vos
+                            String subject = "Prueba de notificación (PDS-TPO)";
+                            String html = """
+            <h2>¡Hola!</h2>
+            <p>Este es un <b>correo de prueba</b> enviado desde el proyecto PDS-TPO con SendGrid.</p>
+            <img src="https://png.pngtree.com/png-vector/20250608/ourlarge/pngtree-kawaii-monkey-sweet-expression-stickers-png-image_16489538.png" />
+            <p> "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+                                    
+                                        Section 1.10.32 of "de Finibus Bonorum et Malorum", written by Cicero in 45 BC
+                                        "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?" </p>
+            <p>Usuario: %s</p>
+            """.formatted(destino);
+                            mailer.sendHtml(destino, subject, html);
+                        } catch (Exception ex) {
+                            System.out.println("❌ Error enviando correo: " + ex.getMessage());
+                        }
+                    }
 
                     case "0" -> {
                         System.out.println("¡Hasta luego! :) ");
@@ -335,6 +407,10 @@ public class Main {
         scrim.setCreadorId(currentUser.getId());
         scrims.add(scrim);
 
+        // 🔔 Notificación automática (via publishOnce interno)
+        scrim.notificarScrimCreado(currentUser.getEmail());
+
+
         System.out.println("\n✅ Scrim creado exitosamente!");
         System.out.println("ID: " + scrim.getId());
         System.out.println("Estado: " + scrim.getNombreEstadoActual());
@@ -385,6 +461,17 @@ public class Main {
 
         try {
             scrim.agregarJugador(currentUser);
+
+
+            if (scrim.getJugadoresActuales() == scrim.getCantidadTotalJugadores()) {
+                var p = new java.util.HashMap<String,String>();
+                p.put("scrimId", scrim.getId());
+                p.put("fechaHora", scrim.getFechaHora() != null ? scrim.getFechaHora().toString() : "próximamente");
+                // p.put("toCsv", String.join(",", emailsParticipantes)); // cuando lo tengas
+                org.example.notifications.bus.DomainEventBus.getInstance()
+                        .publish(new org.example.notifications.events.LobbyCompleto(scrim.getId(), p));
+            }
+
             System.out.println("✅ Te has unido al scrim exitosamente!");
             scrim.mostrarInfo();
         } catch (Exception e) {
@@ -410,6 +497,15 @@ public class Main {
 
         try {
             scrim.confirmarJugador(currentUser);
+            var p = new java.util.HashMap<String,String>();
+            p.put("scrimId", scrim.getId());
+            p.put("juego", scrim.getJuego().getNombre());
+            p.put("region", scrim.getRegion());
+            p.put("fechaHora", scrim.getFechaHora().toString());
+            p.put("to", currentUser.getEmail());
+            org.example.notifications.bus.DomainEventBus.getInstance()
+                    .publish(new org.example.notifications.events.ScrimConfirmado(scrim.getId(), p));
+
             System.out.println("✅ Participación confirmada!");
         } catch (Exception e) {
             System.out.println("❌ Error: " + e.getMessage());
@@ -432,6 +528,23 @@ public class Main {
 
         Scrim scrim = scrims.get(idx);
         scrim.iniciarPartida();
+        scrim.iniciarPartida();
+
+// --- Notificación: scrim en juego ---
+        var payload = new java.util.HashMap<String, String>();
+        payload.put("scrimId", scrim.getId());
+        payload.put("juego", scrim.getJuego().getNombre());
+        payload.put("region", scrim.getRegion());
+        payload.put("fechaHora", scrim.getFechaHora() != null ? scrim.getFechaHora().toString() : "próximamente");
+// TODO: cuando tengas lista de emails -> payload.put("toCsv", String.join(",", emails));
+
+        DomainEventBus.getInstance().publish(
+                new ScrimEnJuego(scrim.getId(), payload)
+        );
+
+        System.out.println("📩 Notificación enviada: Scrim en juego");
+
+
     }
 
     private static void finalizarPartida(Scanner sc) {
@@ -450,6 +563,20 @@ public class Main {
 
         Scrim scrim = scrims.get(idx);
         scrim.finalizarPartida();
+
+// --- Notificación: scrim finalizado ---
+        var payload = new java.util.HashMap<String, String>();
+        payload.put("scrimId", scrim.getId());
+        payload.put("juego", scrim.getJuego().getNombre());
+        payload.put("region", scrim.getRegion());
+        payload.put("fechaHora", scrim.getFechaHora() != null ? scrim.getFechaHora().toString() : "próximamente");
+
+        DomainEventBus.getInstance().publish(
+                new ScrimFinalizado(scrim.getId(), payload)
+        );
+
+        System.out.println("📩 Notificación enviada: Scrim finalizado");
+
     }
 
     private static void cancelarScrim(Scanner sc) {
@@ -468,6 +595,20 @@ public class Main {
 
         Scrim scrim = scrims.get(idx);
         scrim.cancelar();
+        // --- Notificación: scrim cancelado ---
+        var payload = new java.util.HashMap<String, String>();
+        payload.put("scrimId", scrim.getId());
+        payload.put("juego", scrim.getJuego().getNombre());
+        payload.put("region", scrim.getRegion());
+        payload.put("fechaHora", scrim.getFechaHora() != null ? scrim.getFechaHora().toString() : "próximamente");
+
+        DomainEventBus.getInstance().publish(
+                new ScrimCancelado(scrim.getId(), payload)
+        );
+
+        System.out.println("📩 Notificación enviada: Scrim cancelado");
+
+        System.out.println("✅ Scrim cancelado.");
         System.out.println("✅ Scrim cancelado.");
     }
 
