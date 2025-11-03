@@ -1,5 +1,6 @@
 package org.example;
 
+import org.example.model.scrim.ResultadosGenerator;
 import org.example.service.MatchmakingService;
 import org.example.model.scrim.matchmaking.MatchmakingStrategy;
 import org.example.model.scrim.matchmaking.ByMMRStrategy;
@@ -510,15 +511,42 @@ public class Main {
 
         Scrim scrim = scrims.get(idx);
 
-        System.out.print("Equipo ganador (A/B): ");
-        String ganador = sc.nextLine().trim().toUpperCase();
+        System.out.println("\n¿Cómo deseas cargar los resultados?");
+        System.out.println("1. Aleatorio (genera todo automáticamente)");
+        System.out.println("2. Aleatorio realista (sesgo hacia el ganador)");
+        System.out.println("3. Especificar ganador");
+        System.out.print("Opción: ");
+        String opcion = sc.nextLine().trim();
 
-        Resultados resultados = new Resultados();
-        resultados.registrarGanador("Equipo " + ganador);
+        Resultados resultados;
+
+        switch (opcion) {
+            case "1" -> {
+                resultados = ResultadosGenerator.generarResultadosAleatorios(scrim);
+                System.out.println("🎲 Generando resultados aleatorios...");
+            }
+            case "2" -> {
+                resultados = ResultadosGenerator.generarResultadosRealistas(scrim);
+                System.out.println("🎲 Generando resultados realistas...");
+            }
+            case "3" -> {
+                System.out.print("Equipo ganador (A/B): ");
+                String ganador = sc.nextLine().trim().toUpperCase();
+                resultados = ResultadosGenerator.generarConGanador(scrim, ganador);
+                System.out.println("🎲 Generando resultados con ganador especificado...");
+            }
+            default -> {
+                System.out.println("⚠️ Opción inválida, usando aleatorio.");
+                resultados = ResultadosGenerator.generarResultadosAleatorios(scrim);
+            }
+        }
 
         try {
             scrim.cargarResultados(resultados);
             System.out.println("✅ Resultados cargados exitosamente!");
+
+            // Mostrar resumen
+            ResultadosGenerator.mostrarResumen(resultados);
         } catch (Exception e) {
             System.out.println("❌ Error: " + e.getMessage());
         }
@@ -550,8 +578,8 @@ public class Main {
                 .juego(JUEGOS_DISPONIBLES[0])
                 .formato(5)
                 .region("LAN")
-                .fechaHora(LocalDateTime.now().plusMinutes(10))
-                .rango(1, 10)
+                .fechaHora(LocalDateTime.now().plusMinutes(1))
+                .rango(100, 10000)
                 .build();
 
         System.out.println("   Estado: " + scrim.getNombreEstadoActual());
@@ -584,19 +612,11 @@ public class Main {
 
         // 6. Cargar resultados
         System.out.println("\n PASO 6: Cargando resultados...");
-        Resultados resultados = new Resultados();
-        resultados.registrarGanador("Equipo A");
-
-        for (int i = 0; i < 5; i++) {
-            Estadisticas stats = new Estadisticas();
-            stats.setKills(10 + i);
-            stats.setDeaths(5);
-            stats.setAssists(8 + i);
-            stats.setPuntaje(1000 + (i * 100));
-            resultados.agregarEstadistica(usuarios.get(i), stats);
-        }
-
+        Resultados resultados = ResultadosGenerator.generarResultadosRealistas(scrim);
         scrim.cargarResultados(resultados);
+
+        // Mostrar resumen de resultados
+        ResultadosGenerator.mostrarResumen(resultados);
 
         // Mostrar información final
         System.out.println("\n" + "=".repeat(80));

@@ -1,8 +1,11 @@
 package org.example.model.scrim.state;
 
+import org.example.model.Estadisticas;
 import org.example.model.Resultados;
 import org.example.model.scrim.Scrim;
 import org.example.model.user.User;
+
+import java.util.Map;
 
 public class FinalizadoState extends ScrimStateBase {
 
@@ -37,7 +40,16 @@ public class FinalizadoState extends ScrimStateBase {
 
     @Override
     public void cargarResultados(Resultados resultados) {
-        System.out.println("Resultados cargados exitosamente");
+        scrim.setResultados(resultados);
+
+        // Actualizar estadísticas de cada usuario
+        for (Map.Entry<User, Estadisticas> entry : resultados.getEstadisticas().entrySet()) {
+            User usuario = entry.getKey();
+            Estadisticas statsPartida = entry.getValue();
+            usuario.actualizarEstadisticas(statsPartida);
+        }
+
+        System.out.println("Resultados cargados. Ganador: " + resultados.getGanadorEquipo());
     }
 
     @Override
