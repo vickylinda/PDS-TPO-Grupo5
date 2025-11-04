@@ -10,8 +10,8 @@
     "perfil" : {
       "id" : 589672515,
       "juegoPrincipal" : {
-        "nombre" : "Valorant",
-        "descripcion" : "FPS táctico 5v5"
+        "nombre" : "League of Legends",
+        "descripcion" : "MOBA 5v5 competitivo"
       },
       "rolesPreferidos" : [ {
         "id" : 2,
