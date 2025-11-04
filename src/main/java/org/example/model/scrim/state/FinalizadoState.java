@@ -47,6 +47,22 @@ public class FinalizadoState extends ScrimStateBase {
             User usuario = entry.getKey();
             Estadisticas statsPartida = entry.getValue();
             usuario.actualizarEstadisticas(statsPartida);
+
+            // Verificar si el usuario está en el equipo ganador
+            boolean esGanador = false;
+
+            if ("Equipo A".equalsIgnoreCase(resultados.getGanadorEquipo()) && scrim.getEquipoA().contains(usuario)) {
+                esGanador = true;
+            } else if ("Equipo B".equalsIgnoreCase(resultados.getGanadorEquipo()) && scrim.getEquipoB().contains(usuario)) {
+                esGanador = true;
+            }
+
+            // Si el usuario pertenece al equipo ganador, sumar 100 puntos
+            if (esGanador && usuario.getPerfil() != null) {
+                usuario.getPerfil().actualizarPuntaje(100);
+            }
+
+
         }
 
         System.out.println("Resultados cargados. Ganador: " + resultados.getGanadorEquipo());
