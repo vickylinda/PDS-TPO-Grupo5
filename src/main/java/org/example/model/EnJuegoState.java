@@ -1,7 +1,4 @@
-package org.example.model.scrim.state;
-
-import org.example.model.scrim.Scrim;
-import org.example.model.user.User;
+package org.example.model;
 
 import java.time.LocalDateTime;
 

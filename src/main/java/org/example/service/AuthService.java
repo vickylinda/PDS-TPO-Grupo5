@@ -1,8 +1,8 @@
 package org.example.service;
 
-import org.example.model.user.Admin;
-import org.example.model.user.RegularUser;
-import org.example.model.user.User;
+import org.example.model.Admin;
+import org.example.model.RegularUser;
+import org.example.model.User;
 import org.example.security.JwtUtils;
 import org.example.security.PasswordUtils;
 import org.example.security.ValidationUtils;

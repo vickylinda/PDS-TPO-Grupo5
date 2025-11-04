@@ -1,18 +1,18 @@
 package org.example;
 
-import org.example.model.scrim.ResultadosGenerator;
+import org.example.model.ResultadosGenerator;
 import org.example.service.MatchmakingService;
 import org.example.model.scrim.matchmaking.MatchmakingStrategy;
 import org.example.model.scrim.matchmaking.ByMMRStrategy;
 import org.example.model.scrim.matchmaking.ByLatencyStrategy;
 
 import org.example.model.*;
-import org.example.model.scrim.Scrim;
-import org.example.model.scrim.ScrimBuilder;
-import org.example.model.user.Perfil;
-import org.example.model.user.RegularUser;
-import org.example.model.user.Rol;
-import org.example.model.user.User;
+import org.example.model.Scrim;
+import org.example.model.ScrimBuilder;
+import org.example.model.Perfil;
+import org.example.model.RegularUser;
+import org.example.model.Rol;
+import org.example.model.User;
 import org.example.service.AuthService;
 import org.example.store.JsonStore;
 

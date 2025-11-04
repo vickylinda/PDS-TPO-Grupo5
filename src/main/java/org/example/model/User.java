@@ -1,8 +1,6 @@
-package org.example.model.user;
+package org.example.model;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.example.model.Estadisticas;
-import org.example.model.Moderator;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({

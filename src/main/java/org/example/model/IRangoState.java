@@ -1,4 +1,4 @@
-package org.example.model.user.rango;
+package org.example.model;
 
 public interface IRangoState {
     void upgrade();

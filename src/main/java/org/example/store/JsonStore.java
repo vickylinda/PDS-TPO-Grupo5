@@ -2,7 +2,7 @@ package org.example.store;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import org.example.model.user.User;
+import org.example.model.User;
 
 import java.io.IOException;
 import java.nio.file.*;

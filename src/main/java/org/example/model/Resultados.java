@@ -1,7 +1,5 @@
 package org.example.model;
 
-import org.example.model.user.User;
-
 import java.util.*;
 
 public class Resultados {

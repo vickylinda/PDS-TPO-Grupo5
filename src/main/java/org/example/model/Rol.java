@@ -1,4 +1,4 @@
-package org.example.model.user;
+package org.example.model;
 
 public class Rol {
     private int id;

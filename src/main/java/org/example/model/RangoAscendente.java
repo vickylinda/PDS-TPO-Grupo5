@@ -1,8 +1,4 @@
-package org.example.model.user.rango;
-
-import org.example.model.user.Perfil;
-import org.example.model.user.rango.IRangoState;
-import org.example.model.user.rango.RangoFactory;
+package org.example.model;
 
 public class RangoAscendente implements IRangoState {
     private final Perfil perfil;

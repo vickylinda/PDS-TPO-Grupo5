@@ -1,7 +1,4 @@
-package org.example.model.scrim;
-
-import org.example.model.scrim.state.BuscandoJugadoresState;
-import org.example.model.Juego;
+package org.example.model;
 
 import java.time.LocalDateTime;
 import java.util.*;

@@ -1,8 +1,5 @@
-package org.example.model.scrim.state;
+package org.example.model;
 
-
-import org.example.model.scrim.Scrim;
-import org.example.model.user.User;
 
 public class BuscandoJugadoresState extends ScrimStateBase {
 
