@@ -1,8 +1,8 @@
 package org.example.model.scrim.matchmaking;
 
 
-import org.example.model.Scrim;
-import org.example.model.User;
+import org.example.model.scrim.Scrim;
+import org.example.model.user.User;
 
 import java.util.ArrayList;
 import java.util.Comparator;

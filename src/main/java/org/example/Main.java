@@ -1,21 +1,17 @@
 package org.example;
 
-import org.example.model.ResultadosGenerator;
+import org.example.model.scrim.*;
 import org.example.service.MatchmakingService;
 import org.example.model.scrim.matchmaking.MatchmakingStrategy;
 import org.example.model.scrim.matchmaking.ByMMRStrategy;
 import org.example.model.scrim.matchmaking.ByLatencyStrategy;
 
-import org.example.model.*;
-import org.example.model.Scrim;
-import org.example.model.ScrimBuilder;
-import org.example.model.Perfil;
-import org.example.model.RegularUser;
-import org.example.model.Rol;
-import org.example.model.User;
+import org.example.model.user.Perfil;
+import org.example.model.user.RegularUser;
+import org.example.model.user.Rol;
+import org.example.model.user.User;
 import org.example.notifications.bus.DomainEventBus;
 import org.example.notifications.events.ScrimCancelado;
-import org.example.notifications.events.ScrimCreado;
 import org.example.notifications.events.ScrimEnJuego;
 import org.example.notifications.events.ScrimFinalizado;
 import org.example.notifications.repo.InMemoryNotificationRepository;
@@ -108,7 +104,7 @@ public class Main {
                     23) Demo Matchmaking por MMR
                     24) Demo Matchmaking por Latencia
                     25) Buscar Jugadores para Scrim (interactivo)
-                    23) Enviar email de prueba
+                    100) Enviar email de prueba
                    
                     0) Salir
                     """);
@@ -329,7 +325,7 @@ public class Main {
                     case "20" -> cancelarScrim(sc);
                     case "21" -> cargarResultados(sc);
                     case "22" -> demoCompletoScrim();
-                    case "23" -> {
+                    case "100" -> {
                         if (currentUser == null) {
                             System.out.println("Primero hacé login para usar esta opción.");
                             break;
@@ -718,7 +714,7 @@ public class Main {
                 .juego(JUEGOS_DISPONIBLES[0])
                 .formato(5)
                 .region("LAN")
-                .fechaHora(LocalDateTime.now().plusMinutes(1))
+                .fechaHora(LocalDateTime.now().plusSeconds(1))
                 .rango(100, 10000)
                 .build();
 
@@ -768,10 +764,6 @@ public class Main {
         System.out.println("Fecha de finalización: " + scrim.getFechaFinalizacion());
         System.out.println("=".repeat(80) + "\n");
 
-        // Demo de cancelación
-        System.out.println("\n DEMO EXTRA: Intentando cancelar un scrim finalizado...");
-        scrim.cancelar();
-
         // Demo de crear y cancelar
         System.out.println("\n DEMO EXTRA: Creando y cancelando un scrim...");
         Scrim scrimCancelado = ScrimBuilder.nuevo()
@@ -786,6 +778,12 @@ public class Main {
         System.out.println("Estado después de cancelar: " + scrimCancelado.getNombreEstadoActual());
 
         System.out.println("\n✅ Demo completo finalizado!");
+
+        // Demo de cancelación
+        System.out.println("\n DEMO EXTRA: Intentando cancelar un scrim finalizado...");
+        scrim.cancelar();
+
+
     }
 
     private static char[] readPassword(Console console, Scanner sc, String prompt) {
