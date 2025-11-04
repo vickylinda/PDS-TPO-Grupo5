@@ -19,8 +19,10 @@ public abstract class User {
 
     private Perfil perfil;
     private String region;
+    private Estadisticas estadisticasAcumuladas;
 
-    public User() {}
+
+    public User() { this.estadisticasAcumuladas = new Estadisticas();}
 
     public User(String id, String email, String passwordHash, String saltBase64) {
         this.id = id;
@@ -29,11 +31,35 @@ public abstract class User {
         this.saltBase64 = saltBase64;
         this.active = true;
         this.inicioSesionConGoogle = false;
+        this.estadisticasAcumuladas = new Estadisticas();
     }
 
     public User(String id, String email, String passwordHash, String saltBase64, boolean inicioSesionConGoogle) {
         this(id, email, passwordHash, saltBase64);
         this.inicioSesionConGoogle = inicioSesionConGoogle;
+    }
+
+    // estadisticas, logica de negocio
+    public void actualizarEstadisticas(Estadisticas statsPartida) {
+        if (estadisticasAcumuladas == null) {
+            estadisticasAcumuladas = new Estadisticas();
+        }
+        estadisticasAcumuladas.setKills(
+                estadisticasAcumuladas.getKills() + statsPartida.getKills()
+        );
+        estadisticasAcumuladas.setDeaths(
+                estadisticasAcumuladas.getDeaths() + statsPartida.getDeaths()
+        );
+        estadisticasAcumuladas.setAssists(
+                estadisticasAcumuladas.getAssists() + statsPartida.getAssists()
+        );
+    }
+
+    public Estadisticas getEstadisticasAcumuladas() {
+        if (estadisticasAcumuladas == null) {
+            estadisticasAcumuladas = new Estadisticas();
+        }
+        return estadisticasAcumuladas;
     }
 
     public String getId() { return id; }

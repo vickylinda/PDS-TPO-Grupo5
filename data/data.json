@@ -43,50 +43,20 @@
     "region" : "LAN"
   }, {
     "type" : "USER",
-    "id" : "5e111ce2-caa6-41fc-8dba-99d2a21163b8",
-    "email" : "fedeabeledo01@gmail.com",
-    "passwordHash" : "d/0/BQYFRwFLn3ciQFhxvRxCHjm9uibcVLtL/Dcc348=",
-    "saltBase64" : "UfMXzpDAXrxdMyTLacCJ6Q==",
-    "active" : true,
-    "inicioSesionConGoogle" : false,
-    "perfil" : null,
-    "region" : null
-  }, {
-    "type" : "USER",
-    "id" : "e8f9b7c9-e2ec-4f4a-a948-36215e83a026",
-    "email" : "mariaangeles1106@yahoo.com",
-    "passwordHash" : "VLOBNqvmsJ9GWBCfwt0dKkcA9mMIy76MXSGRFuP3BvE=",
-    "saltBase64" : "DBFddG3SbmaTG+VAW6p8Zw==",
-    "active" : true,
-    "inicioSesionConGoogle" : false,
-    "perfil" : null,
-    "region" : null
-  }, {
-    "type" : "USER",
-    "id" : "96798a48-7d44-414d-ac94-a4b5f74e736a",
-    "email" : "fedeabeledo02@gmail.com",
-    "passwordHash" : "qddXok3u4lifCzAoSiPRtex8RJmv7jWhVJ4enSOgab0=",
-    "saltBase64" : "afNGP9psV/Olq5ILdDiC6A==",
-    "active" : true,
-    "inicioSesionConGoogle" : false,
-    "perfil" : null,
-    "region" : null
-  }, {
-    "type" : "USER",
-    "id" : "db980e3f-a111-43bd-a0d7-a539f611d181",
-    "email" : "vicky9abril@yahoo.com.ar",
-    "passwordHash" : "D2GBvOO4eQyKAr06TQ6MgMoNk2AS6uolcw+9qiSAq9M=",
-    "saltBase64" : "1kZJhLBvFseKFsc+HKGqjw==",
+    "id" : "43ba2452-33d0-4ee9-a2f8-1059d9ba3abf",
+    "email" : "mery@gmail.com",
+    "passwordHash" : "+VBxn4qZh3msSCs1sMPy+SIVO8MgThSyYnyavpY8n/k=",
+    "saltBase64" : "cwM2KolepeLGXf6BnQsMMg==",
     "active" : true,
     "inicioSesionConGoogle" : false,
     "perfil" : {
-      "id" : 1687222628,
+      "id" : 1136272466,
       "juegoPrincipal" : {
         "nombre" : "League of Legends",
         "descripcion" : "MOBA 5v5 competitivo"
       },
       "rolesPreferidos" : [ ],
-      "disponibilidadHoraria" : "12pm",
+      "disponibilidadHoraria" : "8pm-12am",
       "puntaje" : 0
     },
     "region" : "LAN"

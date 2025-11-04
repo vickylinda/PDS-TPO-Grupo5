@@ -4,13 +4,12 @@ public class Estadisticas {
     private int kills;
     private int deaths;
     private int assists;
-    private int puntaje;
+
 
     public Estadisticas() {
         this.kills = 0;
         this.deaths = 0;
         this.assists = 0;
-        this.puntaje = 0;
     }
 
     public void setKills(int kills) {
@@ -25,10 +24,6 @@ public class Estadisticas {
         this.assists = assists;
     }
 
-    public void setPuntaje(int puntaje) {
-        this.puntaje = puntaje;
-    }
-
     public int getKills() {
         return kills;
     }
@@ -41,7 +36,4 @@ public class Estadisticas {
         return assists;
     }
 
-    public int getPuntaje() {
-        return puntaje;
-    }
 }

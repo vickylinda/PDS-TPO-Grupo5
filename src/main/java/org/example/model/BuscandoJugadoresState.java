@@ -11,7 +11,7 @@ public class BuscandoJugadoresState extends ScrimStateBase {
     public void agregarJugador(User usuario) {
         // Validar requisitos de rango si existen
         if (scrim.getRangoMin() != null || scrim.getRangoMax() != null) {
-            if (!scrim.cumpleRequisitosRango(usuario.getPerfil().getRango().getValorNivel())) {
+            if (!scrim.cumpleRequisitosRango(usuario.getPerfil().getPuntaje())) {
                 throw new IllegalArgumentException("El jugador no cumple con los requisitos de rango");
             }
         }

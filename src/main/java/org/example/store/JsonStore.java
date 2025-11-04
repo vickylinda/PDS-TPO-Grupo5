@@ -63,13 +63,13 @@ public class JsonStore {
     //para saber dónde quedo grabado el archivo
     public static Path dataFilePath() { return DATA_FILE.toAbsolutePath(); }
 
-    public java.util.List<org.example.model.User> findAllUsers() {
+    public java.util.List<User> findAllUsers() {
         lock.readLock().lock();
         try { return new java.util.ArrayList<>(db.users); }
         finally { lock.readLock().unlock(); }
     }
 
-    public void updateUser(org.example.model.User updated) throws java.io.IOException {
+    public void updateUser(User updated) throws java.io.IOException {
         lock.writeLock().lock();
         try {
             for (int i = 0; i < db.users.size(); i++) {
