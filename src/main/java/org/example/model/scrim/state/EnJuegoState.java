@@ -35,7 +35,7 @@ public class EnJuegoState extends ScrimStateBase {
 
     @Override
     public void cancelar() {
-        System.out.println("No se puede cancelar un scrim que ya está en juego. Debe finalizarse.");
+        throw new IllegalStateException("No se puede cancelar un scrim en juego.");
     }
 
     @Override
