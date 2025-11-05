@@ -266,6 +266,7 @@ public class Scrim {
     public void setJugadoresPorLado(int jugadoresPorLado) {
         this.jugadoresPorLado = jugadoresPorLado;
         this.formato = jugadoresPorLado + "v" + jugadoresPorLado;
+        this.cantidadTotalJugadores = jugadoresPorLado * 2;
     }
 
     public String getFormato() {
@@ -430,6 +431,9 @@ public class Scrim {
     public List<User> getEquipoB() {
         return equipoB;
     }
+    public void setEquipoA(List<User> equipoA) {this.equipoA = equipoA;}
+
+    public void setEquipoB(List<User> equipoB) {this.equipoB=equipoB;}
 
 
 
