@@ -1,8 +1,9 @@
 package org.example.service;
 
-import org.example.model.Admin;
-import org.example.model.RegularUser;
-import org.example.model.User;
+import org.example.model.user.Admin;
+import org.example.model.user.Moderator;
+import org.example.model.user.RegularUser;
+import org.example.model.user.User;
 import org.example.security.JwtUtils;
 import org.example.security.PasswordUtils;
 import org.example.security.ValidationUtils;
@@ -159,7 +160,7 @@ public class AuthService {
         requireRoleAtLeast(token, "ADMIN");
         var u = store.findUserByEmail(emailDestino)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado: " + emailDestino));
-        var nuevo = new org.example.model.Moderator(u.getId(), u.getEmail(), u.getPasswordHash(), u.getSaltBase64());
+        var nuevo = new Moderator(u.getId(), u.getEmail(), u.getPasswordHash(), u.getSaltBase64());
         nuevo.setActive(u.isActive());
         nuevo.setInicioSesionConGoogle(u.isInicioSesionConGoogle());
         store.updateUser(nuevo);

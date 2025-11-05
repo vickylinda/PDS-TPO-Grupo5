@@ -1,27 +1,19 @@
 {
   "users" : [ {
-    "type" : "USER",
+    "type" : "MOD",
     "id" : "2325b043-28bd-4fc4-a3d9-b84ff64a1a1e",
     "email" : "vickylinda@gmail.com",
     "passwordHash" : "cb2KF75/JbZIRt7q5XHbaC2Q14w1bRXRZIiZGdSZiiU=",
     "saltBase64" : "pVWdCS0CIp0QU/pVrmrCjA==",
     "active" : true,
     "inicioSesionConGoogle" : false,
-    "perfil" : {
-      "id" : 589672515,
-      "juegoPrincipal" : {
-        "nombre" : "League of Legends",
-        "descripcion" : "MOBA 5v5 competitivo"
-      },
-      "rolesPreferidos" : [ {
-        "id" : 2,
-        "nombre" : "ADC",
-        "descripcion" : "Tirador/Carry"
-      } ],
-      "disponibilidadHoraria" : "12pm",
-      "puntaje" : 2500
-    },
-    "region" : "LAN"
+    "perfil" : null,
+    "region" : null,
+    "estadisticasAcumuladas" : {
+      "kills" : 0,
+      "deaths" : 0,
+      "assists" : 0
+    }
   }, {
     "type" : "USER",
     "id" : "7298a798-06fe-4ab3-b6e2-b60cb314db0e",
@@ -36,11 +28,22 @@
         "nombre" : "League of Legends",
         "descripcion" : "MOBA 5v5 competitivo"
       },
-      "rolesPreferidos" : [ ],
-      "disponibilidadHoraria" : "12pm",
-      "puntaje" : 100000
+      "rolesPreferidos" : [ {
+        "id" : 1,
+        "nombre" : "Support",
+        "descripcion" : "Rol de apoyo al equipo"
+      } ],
+      "regionesPreferidas" : [ ],
+      "juegosInteresados" : [ ],
+      "disponibilidadHoraria" : "12PM",
+      "puntaje" : 100010
     },
-    "region" : "LAN"
+    "region" : "LAN",
+    "estadisticasAcumuladas" : {
+      "kills" : 0,
+      "deaths" : 0,
+      "assists" : 0
+    }
   }, {
     "type" : "USER",
     "id" : "43ba2452-33d0-4ee9-a2f8-1059d9ba3abf",
@@ -56,9 +59,57 @@
         "descripcion" : "MOBA 5v5 competitivo"
       },
       "rolesPreferidos" : [ ],
+      "regionesPreferidas" : [ ],
+      "juegosInteresados" : [ ],
       "disponibilidadHoraria" : "8pm-12am",
       "puntaje" : 0
     },
-    "region" : "LAN"
+    "region" : "LAN",
+    "estadisticasAcumuladas" : {
+      "kills" : 0,
+      "deaths" : 0,
+      "assists" : 0
+    }
+  }, {
+    "type" : "USER",
+    "id" : "9bbda3cc-7b72-45fb-ad41-37ab6cca328b",
+    "email" : "vicky9abril@yahoo.com.ar",
+    "passwordHash" : "XJjobascltXN5bCNMWfDDKmGu2R2UM/XX/W1GhwOwHs=",
+    "saltBase64" : "Nv5cI+KBqcXCt7r0z/LJSw==",
+    "active" : true,
+    "inicioSesionConGoogle" : false,
+    "perfil" : {
+      "id" : 1368885549,
+      "juegoPrincipal" : {
+        "nombre" : "League of Legends",
+        "descripcion" : "MOBA 5v5 competitivo"
+      },
+      "rolesPreferidos" : [ ],
+      "regionesPreferidas" : [ "EUW" ],
+      "juegosInteresados" : [ ],
+      "disponibilidadHoraria" : "todo el dia",
+      "puntaje" : 0
+    },
+    "region" : "NA",
+    "estadisticasAcumuladas" : {
+      "kills" : 0,
+      "deaths" : 0,
+      "assists" : 0
+    }
+  }, {
+    "type" : "ADMIN",
+    "id" : "2abe70bc-9393-4424-91dd-b2491da325e7",
+    "email" : "vickyvicky@gmail.com",
+    "passwordHash" : "WYRcGrhNaw4Toi0ZG3OwEBki+3S5rQ9qV2oj1/EC7WA=",
+    "saltBase64" : "GLndV7IJD9hFxRQqw9vW7g==",
+    "active" : true,
+    "inicioSesionConGoogle" : false,
+    "perfil" : null,
+    "region" : null,
+    "estadisticasAcumuladas" : {
+      "kills" : 0,
+      "deaths" : 0,
+      "assists" : 0
+    }
   } ]
 }
