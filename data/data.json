@@ -1,29 +1,14 @@
 {
   "users" : [ {
-    "type" : "USER",
+    "type" : "MOD",
     "id" : "2325b043-28bd-4fc4-a3d9-b84ff64a1a1e",
     "email" : "vickylinda@gmail.com",
     "passwordHash" : "cb2KF75/JbZIRt7q5XHbaC2Q14w1bRXRZIiZGdSZiiU=",
     "saltBase64" : "pVWdCS0CIp0QU/pVrmrCjA==",
     "active" : true,
     "inicioSesionConGoogle" : false,
-    "perfil" : {
-      "id" : 589672515,
-      "juegoPrincipal" : {
-        "nombre" : "League of Legends",
-        "descripcion" : "MOBA 5v5 competitivo"
-      },
-      "rolesPreferidos" : [ {
-        "id" : 2,
-        "nombre" : "ADC",
-        "descripcion" : "Tirador/Carry"
-      } ],
-      "regionesPreferidas" : [ ],
-      "juegosInteresados" : [ ],
-      "disponibilidadHoraria" : "12pm",
-      "puntaje" : 2500
-    },
-    "region" : "LAN",
+    "perfil" : null,
+    "region" : null,
     "estadisticasAcumuladas" : {
       "kills" : 0,
       "deaths" : 0,
@@ -43,11 +28,15 @@
         "nombre" : "League of Legends",
         "descripcion" : "MOBA 5v5 competitivo"
       },
-      "rolesPreferidos" : [ ],
+      "rolesPreferidos" : [ {
+        "id" : 1,
+        "nombre" : "Support",
+        "descripcion" : "Rol de apoyo al equipo"
+      } ],
       "regionesPreferidas" : [ ],
       "juegosInteresados" : [ ],
-      "disponibilidadHoraria" : "12pm",
-      "puntaje" : 100000
+      "disponibilidadHoraria" : "12PM",
+      "puntaje" : 100010
     },
     "region" : "LAN",
     "estadisticasAcumuladas" : {
@@ -102,6 +91,21 @@
       "puntaje" : 0
     },
     "region" : "NA",
+    "estadisticasAcumuladas" : {
+      "kills" : 0,
+      "deaths" : 0,
+      "assists" : 0
+    }
+  }, {
+    "type" : "ADMIN",
+    "id" : "2abe70bc-9393-4424-91dd-b2491da325e7",
+    "email" : "vickyvicky@gmail.com",
+    "passwordHash" : "WYRcGrhNaw4Toi0ZG3OwEBki+3S5rQ9qV2oj1/EC7WA=",
+    "saltBase64" : "GLndV7IJD9hFxRQqw9vW7g==",
+    "active" : true,
+    "inicioSesionConGoogle" : false,
+    "perfil" : null,
+    "region" : null,
     "estadisticasAcumuladas" : {
       "kills" : 0,
       "deaths" : 0,
