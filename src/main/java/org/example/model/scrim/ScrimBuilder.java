@@ -7,8 +7,6 @@ import java.util.*;
 
 public class ScrimBuilder {
 
-    private boolean built = false; // Para evitar reutilización
-
     // Campos obligatorios
     private Juego juego;
     private int jugadoresPorLado;
@@ -25,18 +23,18 @@ public class ScrimBuilder {
     // Campos opcionales
     private Integer cantidadTotalJugadores;
 
-    // Constructor privado para forzar uso de mÃ©todo estÃ¡tico
+    // Constructor privado para forzar uso de método estático
     private ScrimBuilder() {}
 
     public static ScrimBuilder nuevo() {
         return new ScrimBuilder();
     }
 
-    // ===== MÃ‰TODOS OBLIGATORIOS =====
+    // ===== MÉTODOS OBLIGATORIOS =====
 
     public ScrimBuilder juego(Juego juego) {
         if (juego == null || juego.getNombre().trim().isEmpty()) {
-            throw new IllegalArgumentException("El juego no puede ser nulo o vacÃ­o");
+            throw new IllegalArgumentException("El juego no puede ser nulo o vacío");
         }
         this.juego = juego;
         return this;
@@ -52,7 +50,7 @@ public class ScrimBuilder {
 
     public ScrimBuilder region(String region) {
         if (region == null || region.trim().isEmpty()) {
-            throw new IllegalArgumentException("La regiÃ³n no puede ser nula o vacÃ­a");
+            throw new IllegalArgumentException("La región no puede ser nula o vacía");
         }
         this.region = region.trim();
         return this;
@@ -69,14 +67,14 @@ public class ScrimBuilder {
         return this;
     }
 
-    // ===== MÃ‰TODOS CON VALIDACIÃ“N =====
+    // ===== MÉTODOS CON VALIDACIÓN =====
 
     public ScrimBuilder rango(int min, int max) {
         if (min < 0) {
-            throw new IllegalArgumentException("El rango mÃ­nimo no puede ser negativo");
+            throw new IllegalArgumentException("El rango mínimo no puede ser negativo");
         }
         if (max < min) {
-            throw new IllegalArgumentException("El rango mÃ¡ximo debe ser mayor o igual al mÃ­nimo");
+            throw new IllegalArgumentException("El rango máximo debe ser mayor o igual al mínimo");
         }
         this.rangoMin = min;
         this.rangoMax = max;
@@ -85,7 +83,7 @@ public class ScrimBuilder {
 
     public ScrimBuilder latenciaMaxima(int latenciaMaxima) {
         if (latenciaMaxima < 0 || latenciaMaxima > 500) {
-            throw new IllegalArgumentException("Latencia mÃ¡xima debe estar entre 0 y 500 ms");
+            throw new IllegalArgumentException("Latencia máxima debe estar entre 0 y 500 ms");
         }
         this.latenciaMaxima = latenciaMaxima;
         return this;
@@ -93,14 +91,14 @@ public class ScrimBuilder {
 
     public ScrimBuilder duracionEstimada(int minutos) {
         if (minutos < 5 || minutos > 480) {
-            throw new IllegalArgumentException("DuraciÃ³n estimada debe estar entre 5 y 480 minutos");
+            throw new IllegalArgumentException("Duración estimada debe estar entre 5 y 480 minutos");
         }
         this.duracionEstimada = minutos;
         return this;
     }
 
 
-    // ===== MÃ‰TODOS OPCIONALES =====
+    // ===== MÉTODOS OPCIONALES =====
 
     public ScrimBuilder cantidadTotalJugadores(int cantidad) {
         if (cantidad < 2) {
@@ -114,11 +112,6 @@ public class ScrimBuilder {
     // ===== BUILD CON VALIDACIONES =====
 
     public Scrim build() {
-
-        if (built) {
-            throw new IllegalStateException("Builder ya fue utilizado");
-        }
-
         // Validar campos obligatorios
         validarCamposObligatorios();
 
@@ -147,7 +140,10 @@ public class ScrimBuilder {
                         : this.jugadoresPorLado * 2
         );
 
-        built = true;
+
+        // Establecer estado inicial
+        scrim.setEstado(new BuscandoJugadoresState(scrim));
+        scrim.setFechaCreacion(LocalDateTime.now());
 
         return scrim;
     }
@@ -157,7 +153,7 @@ public class ScrimBuilder {
 
         if (juego == null) camposFaltantes.add("juego");
         if (jugadoresPorLado == 0) camposFaltantes.add("formato/jugadoresPorLado");
-        if (region == null) camposFaltantes.add("regiÃ³n");
+        if (region == null) camposFaltantes.add("región");
         if (fechaHora == null) camposFaltantes.add("fechaHora");
 
         if (!camposFaltantes.isEmpty()) {
